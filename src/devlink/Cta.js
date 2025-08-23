@@ -6,7 +6,7 @@ import _styles from "./Cta.module.css";
 
 export function Cta({
   as: _Component = _Builtin.Link,
-  ctaText = "This is CTA",
+  ctaText = "Hello world",
 }) {
   return (
     <_Component

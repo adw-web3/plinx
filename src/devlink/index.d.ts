@@ -12,3 +12,4 @@ export * from "./devlink";
 export * from "./Cta";
 export * from "./DevLinkProvider";
 export * from "./NavBar";
+export * from "./NiebieskaKarta";
