@@ -1,0 +1,10 @@
+.cta {
+  padding: 10px 20px;
+  background-color: hsla(77, 100.00%, 50.00%, 1.00);
+  text-decoration: none;
+}
+
+.text-block {
+  color: hsla(0, 0.00%, 0.00%, 1.00);
+  font-weight: 700;
+}
