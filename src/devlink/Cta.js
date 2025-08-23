@@ -4,7 +4,10 @@ import * as _Builtin from "./_Builtin";
 import * as _utils from "./utils";
 import _styles from "./Cta.module.css";
 
-export function Cta({ as: _Component = _Builtin.Link }) {
+export function Cta({
+  as: _Component = _Builtin.Link,
+  ctaText = "This is CTA",
+}) {
   return (
     <_Component
       className={_utils.cx(_styles, "cta")}
@@ -15,7 +18,7 @@ export function Cta({ as: _Component = _Builtin.Link }) {
       }}
     >
       <_Builtin.Block className={_utils.cx(_styles, "text-block")} tag="div">
-        {"Connect wallet"}
+        {ctaText}
       </_Builtin.Block>
     </_Component>
   );
