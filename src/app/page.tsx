@@ -5,7 +5,9 @@ import { Cta } from "@/devlink/Cta"; // Import the Navbar component
 
 export default function Home() {
   return (
-    <Cta></Cta>
+    <div className="flex items-center justify-center min-h-screen">
+      <Cta />
+    </div>
   );
 }
 
