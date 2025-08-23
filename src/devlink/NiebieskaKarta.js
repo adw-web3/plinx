@@ -5,5 +5,11 @@ import * as _utils from "./utils";
 import _styles from "./NiebieskaKarta.module.css";
 
 export function NiebieskaKarta({ as: _Component = _Builtin.Block }) {
-  return <_Component className={_utils.cx(_styles, "div-block")} tag="div" />;
+  return (
+    <_Component className={_utils.cx(_styles, "div-block")} tag="div">
+      <_Builtin.Block className={_utils.cx(_styles, "balance")} tag="div">
+        {"This is some text inside of a div block."}
+      </_Builtin.Block>
+    </_Component>
+  );
 }
