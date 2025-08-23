@@ -15,7 +15,7 @@ export function Cta({ as: _Component = _Builtin.Link }) {
       }}
     >
       <_Builtin.Block className={_utils.cx(_styles, "text-block")} tag="div">
-        {"This is CTA"}
+        {"Connect wallet"}
       </_Builtin.Block>
     </_Component>
   );
