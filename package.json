@@ -14,7 +14,9 @@
   "dependencies": {
     "next": "15.2.5",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "starknet": "^7.6.4",
+    "starknetkit": "^3.0.3"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20250415.0",

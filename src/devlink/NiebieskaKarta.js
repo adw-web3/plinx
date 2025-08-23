@@ -4,11 +4,11 @@ import * as _Builtin from "./_Builtin";
 import * as _utils from "./utils";
 import _styles from "./NiebieskaKarta.module.css";
 
-export function NiebieskaKarta({ as: _Component = _Builtin.Block }) {
+export function NiebieskaKarta({ as: _Component = _Builtin.Block, balance }) {
   return (
     <_Component className={_utils.cx(_styles, "div-block")} tag="div">
       <_Builtin.Block className={_utils.cx(_styles, "balance")} tag="div">
-        {"This is some text inside of a div block."}
+        {balance ?? "Connect wallet to view balance"}
       </_Builtin.Block>
     </_Component>
   );
