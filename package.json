@@ -12,9 +12,13 @@
     "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts"
   },
   "dependencies": {
+    "@starknet-io/get-starknet": "^4.0.7",
+    "@starknet-react/core": "^4.0.4",
+    "get-starknet": "^4.0.0",
     "next": "15.2.5",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "starknet": "^7.6.4"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20250415.0",
@@ -31,11 +35,9 @@
     "typescript": "^5",
     "wrangler": "^4.11.1"
   },
-
   "optionalDependencies": {
-  "@ast-grep/napi-linux-x64-gnu": "^0.39.4",
-  "@ast-grep/napi-darwin-arm64": "^0.39.4",
-  "@ast-grep/napi-darwin-x64": "^0.39.4"
-}
-
+    "@ast-grep/napi-darwin-arm64": "^0.39.4",
+    "@ast-grep/napi-darwin-x64": "^0.39.4",
+    "@ast-grep/napi-linux-x64-gnu": "^0.39.4"
+  }
 }
