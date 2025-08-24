@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { NiebieskaKarta } from "@/devlink";
-import { Cta } from "@/devlink/Cta"; // Import the Navbar component
+import { NiebieskaKarta } from "@/devlink/NiebieskaKarta";
+import { Cta } from "@/devlink/Cta";
 
 export default function Home() {
   const [provider, setProvider] = useState<any>();
@@ -11,7 +11,9 @@ export default function Home() {
   useEffect(() => {
     async function initProvider() {
       const { Provider, constants } = await import("starknet");
-      const prov = new Provider({ nodeUrl: constants.NetworkName.SN_MAIN });
+      const prov = new Provider({
+        nodeUrl: constants.RPC_DEFAULT_NODES.SN_MAIN[0],
+      });
       setProvider(prov);
     }
     void initProvider();
@@ -28,12 +30,17 @@ export default function Home() {
       const address = starknet.selectedAddress;
       if (provider) {
         try {
-          const { ETH_ADDRESS } = await import("starknet");
-          const result = await (provider as any).getBalance({
-            ownerAddress: address,
+          const { ETH_ADDRESS, uint256 } = await import("starknet");
+          const { result } = await provider.callContract({
             contractAddress: ETH_ADDRESS,
+            entrypoint: "balanceOf",
+            calldata: [address],
           });
-          setBalance(result.balance);
+          const balanceBn = uint256.uint256ToBN({
+            low: result[0],
+            high: result[1],
+          });
+          setBalance(balanceBn.toString());
         } catch (balanceError) {
           console.error("Failed to fetch balance", balanceError);
         }
