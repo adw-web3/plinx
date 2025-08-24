@@ -14,7 +14,8 @@
   "dependencies": {
     "next": "15.2.5",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "starknet": "^7.1.0"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20250415.0",
@@ -31,11 +32,9 @@
     "typescript": "^5",
     "wrangler": "^4.11.1"
   },
-
   "optionalDependencies": {
-  "@ast-grep/napi-linux-x64-gnu": "^0.39.4",
-  "@ast-grep/napi-darwin-arm64": "^0.39.4",
-  "@ast-grep/napi-darwin-x64": "^0.39.4"
-}
-
+    "@ast-grep/napi-darwin-arm64": "^0.39.4",
+    "@ast-grep/napi-darwin-x64": "^0.39.4",
+    "@ast-grep/napi-linux-x64-gnu": "^0.39.4"
+  }
 }
