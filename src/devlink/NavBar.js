@@ -1,10 +1,13 @@
 "use client";
 import React from "react";
 import * as _Builtin from "./_Builtin";
+import * as _utils from "./utils";
+import _styles from "./NavBar.module.css";
 
 export function NavBar({ as: _Component = _Builtin.NavbarWrapper }) {
   return (
     <_Component
+      className={_utils.cx(_styles, "navbar")}
       tag="div"
       config={{
         animation: "default",
@@ -24,6 +27,7 @@ export function NavBar({ as: _Component = _Builtin.NavbarWrapper }) {
         />
         <_Builtin.NavbarMenu tag="nav" role="navigation">
           <_Builtin.NavbarLink
+            className={_utils.cx(_styles, "nav-link")}
             options={{
               href: "#",
             }}
@@ -31,6 +35,7 @@ export function NavBar({ as: _Component = _Builtin.NavbarWrapper }) {
             {"1"}
           </_Builtin.NavbarLink>
           <_Builtin.NavbarLink
+            className={_utils.cx(_styles, "nav-link")}
             options={{
               href: "#",
             }}
@@ -38,6 +43,7 @@ export function NavBar({ as: _Component = _Builtin.NavbarWrapper }) {
             {"2"}
           </_Builtin.NavbarLink>
           <_Builtin.NavbarLink
+            className={_utils.cx(_styles, "nav-link")}
             options={{
               href: "#",
             }}

@@ -1,5 +1,6 @@
 .cta {
   padding: 10px 20px;
+  border-radius: 50px;
   background-color: hsla(114, 53.70%, 78.40%, 1.00);
   text-decoration: none;
 }
