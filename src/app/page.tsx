@@ -15,9 +15,23 @@ export default function Home() {
     void initProvider();
   }, []);
 
+  async function connectWallet() {
+    const { starknet } = window as unknown as { starknet?: any };
+    if (!starknet) {
+      console.error("No Starknet wallet extension detected");
+      return;
+    }
+    try {
+      await starknet.enable();
+      console.log("Connected wallet", starknet.selectedAddress);
+    } catch (error) {
+      console.error("Failed to connect wallet", error);
+    }
+  }
+
   return (
     <div className="flex items-center justify-center min-h-screen">
-      <Cta ctaText="Connect Wallet" />
+      <Cta ctaText="Connect Wallet" onClick={connectWallet} />
       <NiebieskaKarta />
     </div>
   );
