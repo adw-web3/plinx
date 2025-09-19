@@ -71,7 +71,7 @@ export default function Home() {
                     <div className="ml-3">
                       <h3 className="text-sm font-medium text-yellow-800">Demo Mode</h3>
                       <div className="mt-2 text-sm text-yellow-700">
-                        <p>You're seeing demo data. To get real transaction data:</p>
+                        <p>You&apos;re seeing demo data. To get real transaction data:</p>
                         <ol className="list-decimal list-inside mt-2 space-y-1">
                           <li>Get a free API key from <a href="https://bscscan.com/apis" target="_blank" rel="noopener noreferrer" className="underline">BSCScan</a></li>
                           <li>Add <code className="bg-yellow-100 px-1 rounded">NEXT_PUBLIC_BSCSCAN_API_KEY=your_api_key</code> to your .env file</li>
