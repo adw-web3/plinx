@@ -10,7 +10,6 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [currentWallet, setCurrentWallet] = useState("");
-  const [isDemo, setIsDemo] = useState(false);
 
   const handleAddressSubmit = async (address: string) => {
     setLoading(true);
@@ -20,14 +19,12 @@ export default function Home() {
     try {
       const result = await getOutgoingTransactions(address);
       setTransactions(result.transactions);
-      setIsDemo(result.isDemo);
       if (result.error) {
         setError(result.error);
       }
     } catch {
       setError("Failed to fetch transactions. Please try again.");
       setTransactions([]);
-      setIsDemo(false);
     } finally {
       setLoading(false);
     }

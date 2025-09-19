@@ -44,11 +44,11 @@ export function RecipientAnalysisComponent({ recipients, loading, error }: Recip
 
   const totalTokensDistributed = recipients.reduce((sum, recipient) => {
     return sum + BigInt(recipient.totalReceived);
-  }, 0n);
+  }, BigInt(0));
 
   const totalCurrentlyHeld = recipients.reduce((sum, recipient) => {
     return sum + BigInt(recipient.currentBalance);
-  }, 0n);
+  }, BigInt(0));
 
   return (
     <div className="w-full max-w-6xl space-y-6">
@@ -105,11 +105,11 @@ export function RecipientAnalysisComponent({ recipients, loading, error }: Recip
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {recipients.map((recipient, index) => {
+              {recipients.map((recipient) => {
                 const currentBalance = BigInt(recipient.currentBalance);
                 const totalReceived = BigInt(recipient.totalReceived);
                 const retentionPercentage = totalReceived > 0
-                  ? (Number(currentBalance * 100n / totalReceived))
+                  ? (Number(currentBalance * BigInt(100) / totalReceived))
                   : 0;
 
                 return (

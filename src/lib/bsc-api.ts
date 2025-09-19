@@ -178,7 +178,7 @@ export async function getDayvidendeRecipients(walletAddress: string): Promise<{
 
   if (!apiKey || apiKey === "YourApiKeyToken") {
     return {
-      recipients: getMockDayvidendeRecipients(walletAddress),
+      recipients: getMockDayvidendeRecipients(),
       isDemo: true,
       error: "No BSCScan API key configured. Showing demo data."
     };
@@ -392,7 +392,7 @@ function getMockRSDTransfers(walletAddress: string): TokenTransfer[] {
   ];
 }
 
-function getMockDayvidendeRecipients(walletAddress: string): RecipientAnalysis[] {
+function getMockDayvidendeRecipients(): RecipientAnalysis[] {
   return [
     {
       address: "0x742d35Cc6635C0532925a3b8D000b73B2d9B2E9F",
