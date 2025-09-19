@@ -2,18 +2,15 @@
 
 import { useState } from "react";
 import { WalletInput } from "@/components/WalletInput";
-import { TransactionList } from "@/components/TransactionList";
-import { TokenTransferList } from "@/components/TokenTransferList";
-import { getOutgoingTransactions, getRSDTokenTransfers, type Transaction, type TokenTransfer } from "@/lib/bsc-api";
+import { RecipientAnalysisComponent } from "@/components/RecipientAnalysis";
+import { getDayvidendeRecipients, type RecipientAnalysis } from "@/lib/bsc-api";
 
 export default function Home() {
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [tokenTransfers, setTokenTransfers] = useState<TokenTransfer[]>([]);
+  const [recipients, setRecipients] = useState<RecipientAnalysis[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [currentWallet, setCurrentWallet] = useState("");
   const [isDemo, setIsDemo] = useState(false);
-  const [activeTab, setActiveTab] = useState<"transactions" | "tokens">("transactions");
 
   const handleAddressSubmit = async (address: string) => {
     setLoading(true);
@@ -21,23 +18,16 @@ export default function Home() {
     setCurrentWallet(address);
 
     try {
-      // Fetch both BNB transactions and RSD token transfers in parallel
-      const [transactionResult, tokenResult] = await Promise.all([
-        getOutgoingTransactions(address),
-        getRSDTokenTransfers(address)
-      ]);
+      const result = await getDayvidendeRecipients(address);
+      setRecipients(result.recipients);
+      setIsDemo(result.isDemo);
 
-      setTransactions(transactionResult.transactions);
-      setTokenTransfers(tokenResult.transfers);
-      setIsDemo(transactionResult.isDemo || tokenResult.isDemo);
-
-      if (transactionResult.error || tokenResult.error) {
-        setError(transactionResult.error || tokenResult.error || "");
+      if (result.error) {
+        setError(result.error);
       }
     } catch {
-      setError("Failed to fetch data. Please try again.");
-      setTransactions([]);
-      setTokenTransfers([]);
+      setError("Failed to fetch recipient data. Please try again.");
+      setRecipients([]);
       setIsDemo(false);
     } finally {
       setLoading(false);
@@ -49,10 +39,10 @@ export default function Home() {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            BSC Transaction & Token Tracker
+            Dayvidende Token Recipients Analyzer
           </h1>
           <p className="text-gray-600">
-            Enter a Binance Smart Chain wallet address to view outgoing BNB transactions and RSD token transfers
+            Enter a wallet address to analyze all recipients of Dayvidende (DAYV) tokens and their current holdings
           </p>
         </div>
 
@@ -63,12 +53,15 @@ export default function Home() {
           />
 
           {currentWallet && (
-            <div className="w-full max-w-4xl space-y-4">
+            <div className="w-full max-w-6xl space-y-4">
               <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-                <h3 className="text-sm font-medium text-gray-500 mb-1">Tracking wallet:</h3>
+                <h3 className="text-sm font-medium text-gray-500 mb-1">Analyzing wallet:</h3>
                 <code className="text-sm font-mono text-gray-900 break-all">
                   {currentWallet}
                 </code>
+                <p className="text-xs text-gray-500 mt-2">
+                  Token Contract: 0xfF1E54d02B5d0576E7BEfD03602E36d5720D1997 (Dayvidende)
+                </p>
               </div>
 
               {isDemo && (
@@ -82,7 +75,7 @@ export default function Home() {
                     <div className="ml-3">
                       <h3 className="text-sm font-medium text-yellow-800">Demo Mode</h3>
                       <div className="mt-2 text-sm text-yellow-700">
-                        <p>You&apos;re seeing demo data. To get real transaction data:</p>
+                        <p>You&apos;re seeing demo data. To get real recipient analysis:</p>
                         <ol className="list-decimal list-inside mt-2 space-y-1">
                           <li>Get a free API key from <a href="https://bscscan.com/apis" target="_blank" rel="noopener noreferrer" className="underline">BSCScan</a></li>
                           <li>Add <code className="bg-yellow-100 px-1 rounded">NEXT_PUBLIC_BSCSCAN_API_KEY=your_api_key</code> to your .env file</li>
@@ -93,52 +86,14 @@ export default function Home() {
                   </div>
                 </div>
               )}
-
-              {/* Tab Navigation */}
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-                <div className="border-b border-gray-200">
-                  <nav className="flex">
-                    <button
-                      onClick={() => setActiveTab("transactions")}
-                      className={`px-6 py-4 text-sm font-medium border-b-2 transition-colors ${
-                        activeTab === "transactions"
-                          ? "border-blue-500 text-blue-600"
-                          : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                      }`}
-                    >
-                      BNB Transactions ({transactions.length})
-                    </button>
-                    <button
-                      onClick={() => setActiveTab("tokens")}
-                      className={`px-6 py-4 text-sm font-medium border-b-2 transition-colors ${
-                        activeTab === "tokens"
-                          ? "border-blue-500 text-blue-600"
-                          : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                      }`}
-                    >
-                      RSD Token Transfers ({tokenTransfers.length})
-                    </button>
-                  </nav>
-                </div>
-              </div>
             </div>
           )}
 
-          {currentWallet && activeTab === "transactions" && (
-            <TransactionList
-              transactions={transactions}
-              loading={loading}
-              error={error}
-            />
-          )}
-
-          {currentWallet && activeTab === "tokens" && (
-            <TokenTransferList
-              transfers={tokenTransfers}
-              loading={loading}
-              error={error}
-            />
-          )}
+          <RecipientAnalysisComponent
+            recipients={recipients}
+            loading={loading}
+            error={error}
+          />
         </div>
       </div>
     </div>

@@ -35,11 +35,26 @@ export interface TokenTransferResponse {
   result: TokenTransfer[];
 }
 
+export interface RecipientAnalysis {
+  address: string;
+  totalReceived: string;
+  currentBalance: string;
+  transferCount: number;
+  lastTransferTime: string;
+}
+
+export interface TokenBalanceResponse {
+  status: string;
+  message: string;
+  result: string;
+}
+
 // Free BSCScan API - you can get a free API key from https://bscscan.com/apis
 const BSCSCAN_API_URL = "https://api.etherscan.io/v2/api";
 
-// RSD Token Contract Address on BSC
+// Token Contract Addresses on BSC
 const RSD_CONTRACT_ADDRESS = "0x61ed1c66239d29cc93c8597c6167159e8f69a823";
+const DAYVIDENDE_CONTRACT_ADDRESS = "0xfF1E54d02B5d0576E7BEfD03602E36d5720D1997";
 
 export async function getOutgoingTransactions(walletAddress: string): Promise<{
   transactions: Transaction[];
@@ -153,6 +168,150 @@ export async function getRSDTokenTransfers(walletAddress: string): Promise<{
   }
 }
 
+export async function getDayvidendeRecipients(walletAddress: string): Promise<{
+  recipients: RecipientAnalysis[];
+  isDemo: boolean;
+  error?: string;
+}> {
+  // Check if we have a valid API key from environment
+  const apiKey = process.env.NEXT_PUBLIC_BSCSCAN_API_KEY;
+
+  if (!apiKey || apiKey === "YourApiKeyToken") {
+    return {
+      recipients: getMockDayvidendeRecipients(walletAddress),
+      isDemo: true,
+      error: "No BSCScan API key configured. Showing demo data."
+    };
+  }
+
+  try {
+    // Fetch all Dayvidende token transfers FROM the specified wallet
+    const response = await fetch(
+      `${BSCSCAN_API_URL}?chainid=56&module=account&action=tokentx&contractaddress=${DAYVIDENDE_CONTRACT_ADDRESS}&address=${walletAddress}&page=1&offset=1000&startblock=0&endblock=99999999&sort=desc&apikey=${apiKey}`
+    );
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data: TokenTransferResponse = await response.json();
+
+    if (data.status !== "1") {
+      if (data.message.includes("No transactions found")) {
+        return {
+          recipients: [],
+          isDemo: false
+        };
+      }
+      throw new Error(data.message || "Failed to fetch token transfers");
+    }
+
+    // Filter only outgoing transfers (where 'from' equals the wallet address)
+    const outgoingTransfers = data.result.filter(
+      (transfer) => transfer.from.toLowerCase() === walletAddress.toLowerCase()
+    );
+
+    // Group transfers by recipient address
+    const recipientMap = new Map<string, {
+      totalReceived: bigint;
+      transferCount: number;
+      lastTransferTime: string;
+    }>();
+
+    outgoingTransfers.forEach((transfer) => {
+      const recipient = transfer.to.toLowerCase();
+      const value = BigInt(transfer.value);
+      const existing = recipientMap.get(recipient);
+
+      if (existing) {
+        existing.totalReceived += value;
+        existing.transferCount += 1;
+        if (parseInt(transfer.timeStamp) > parseInt(existing.lastTransferTime)) {
+          existing.lastTransferTime = transfer.timeStamp;
+        }
+      } else {
+        recipientMap.set(recipient, {
+          totalReceived: value,
+          transferCount: 1,
+          lastTransferTime: transfer.timeStamp
+        });
+      }
+    });
+
+    // Get current balances for each recipient
+    const recipients: RecipientAnalysis[] = [];
+    for (const [address, data] of recipientMap) {
+      try {
+        const balance = await getTokenBalance(address, DAYVIDENDE_CONTRACT_ADDRESS);
+        recipients.push({
+          address,
+          totalReceived: data.totalReceived.toString(),
+          currentBalance: balance,
+          transferCount: data.transferCount,
+          lastTransferTime: data.lastTransferTime
+        });
+      } catch (error) {
+        console.error(`Failed to get balance for ${address}:`, error);
+        recipients.push({
+          address,
+          totalReceived: data.totalReceived.toString(),
+          currentBalance: "0",
+          transferCount: data.transferCount,
+          lastTransferTime: data.lastTransferTime
+        });
+      }
+    }
+
+    // Sort by total received (descending)
+    recipients.sort((a, b) => {
+      const aTotal = BigInt(a.totalReceived);
+      const bTotal = BigInt(b.totalReceived);
+      return aTotal > bTotal ? -1 : aTotal < bTotal ? 1 : 0;
+    });
+
+    return {
+      recipients,
+      isDemo: false
+    };
+  } catch (error) {
+    console.error("Error fetching Dayvidende recipients:", error);
+    return {
+      recipients: [],
+      isDemo: false,
+      error: `Failed to fetch Dayvidende recipients: ${error instanceof Error ? error.message : 'Unknown error'}`
+    };
+  }
+}
+
+async function getTokenBalance(walletAddress: string, contractAddress: string): Promise<string> {
+  const apiKey = process.env.NEXT_PUBLIC_BSCSCAN_API_KEY;
+
+  if (!apiKey || apiKey === "YourApiKeyToken") {
+    return "0";
+  }
+
+  try {
+    const response = await fetch(
+      `${BSCSCAN_API_URL}?chainid=56&module=account&action=tokenbalance&contractaddress=${contractAddress}&address=${walletAddress}&tag=latest&apikey=${apiKey}`
+    );
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data: TokenBalanceResponse = await response.json();
+
+    if (data.status !== "1") {
+      return "0";
+    }
+
+    return data.result;
+  } catch (error) {
+    console.error("Error fetching token balance:", error);
+    return "0";
+  }
+}
+
 // Mock data for demonstration when API is not available
 function getMockTransactions(walletAddress: string): Transaction[] {
   return [
@@ -229,6 +388,32 @@ function getMockRSDTransfers(walletAddress: string): TokenTransfer[] {
       blockNumber: "12345683",
       timeStamp: "1640995500",
       contractAddress: RSD_CONTRACT_ADDRESS
+    }
+  ];
+}
+
+function getMockDayvidendeRecipients(walletAddress: string): RecipientAnalysis[] {
+  return [
+    {
+      address: "0x742d35Cc6635C0532925a3b8D000b73B2d9B2E9F",
+      totalReceived: "1000000000000000000000", // 1000 tokens
+      currentBalance: "750000000000000000000", // 750 tokens
+      transferCount: 3,
+      lastTransferTime: "1640995500"
+    },
+    {
+      address: "0x8894E0a0c962CB723c1976a4421c95949bE2D4E3",
+      totalReceived: "500000000000000000000", // 500 tokens
+      currentBalance: "500000000000000000000", // 500 tokens
+      transferCount: 1,
+      lastTransferTime: "1640995400"
+    },
+    {
+      address: "0x2170Ed0880ac9A755fd29B2688956BD959F933F8",
+      totalReceived: "250000000000000000000", // 250 tokens
+      currentBalance: "0", // 0 tokens (sold/transferred)
+      transferCount: 1,
+      lastTransferTime: "1640995300"
     }
   ];
 }
