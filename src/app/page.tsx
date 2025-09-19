@@ -1,61 +1,68 @@
 "use client";
 
 import { useState } from "react";
-import type { MouseEvent, KeyboardEvent } from "react";
-import { List, ListItem } from "@/devlink/_Builtin";
-import { Cta } from "@/devlink/Cta";
-import { NiebieskaKarta } from "@/devlink";
+import { WalletInput } from "@/components/WalletInput";
+import { TransactionList } from "@/components/TransactionList";
+import { getOutgoingTransactions, type Transaction } from "@/lib/bsc-api";
 
 export default function Home() {
-  const [walletEntries, setWalletEntries] = useState<string[]>([]);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [currentWallet, setCurrentWallet] = useState("");
 
-  const addWalletEntry = () => {
-    setWalletEntries((previous) => [
-      ...previous,
-      `Wallet connection ${previous.length + 1}`,
-    ]);
-  };
+  const handleAddressSubmit = async (address: string) => {
+    setLoading(true);
+    setError("");
+    setCurrentWallet(address);
 
-  const handleClick = (event: MouseEvent<HTMLDivElement>) => {
-    event.preventDefault();
-    addWalletEntry();
-  };
-
-  const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
-    if (event.key === "Enter" || event.key === " ") {
-      event.preventDefault();
-      addWalletEntry();
+    try {
+      const txs = await getOutgoingTransactions(address);
+      setTransactions(txs);
+    } catch (err) {
+      setError("Failed to fetch transactions. Please try again.");
+      setTransactions([]);
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center gap-6">
-      <div
-        role="button"
-        tabIndex={0}
-        className="cursor-pointer"
-        onClick={handleClick}
-        onKeyDown={handleKeyDown}
-      >
-        <Cta ctaText="Connect Wallet" />
+    <div className="min-h-screen bg-gray-50 py-8">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            BSC Transaction Tracker
+          </h1>
+          <p className="text-gray-600">
+            Enter a Binance Smart Chain wallet address to view all outgoing transactions
+          </p>
+        </div>
+
+        <div className="flex flex-col items-center space-y-8">
+          <WalletInput
+            onAddressSubmit={handleAddressSubmit}
+            loading={loading}
+          />
+
+          {currentWallet && (
+            <div className="w-full max-w-4xl">
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
+                <h3 className="text-sm font-medium text-gray-500 mb-1">Tracking wallet:</h3>
+                <code className="text-sm font-mono text-gray-900 break-all">
+                  {currentWallet}
+                </code>
+              </div>
+            </div>
+          )}
+
+          <TransactionList
+            transactions={transactions}
+            loading={loading}
+            error={error}
+          />
+        </div>
       </div>
-      <List
-        tag="ul"
-        unstyled={false}
-        className="w-full max-w-sm space-y-2"
-        aria-label="Wallet connections"
-      >
-        {walletEntries.length === 0 ? (
-          <ListItem className="text-gray-500">
-            No wallet connections yet.
-          </ListItem>
-        ) : (
-          walletEntries.map((entry, index) => (
-            <ListItem key={`${entry}-${index}`}>{entry}</ListItem>
-          ))
-        )}
-      </List>
-      <NiebieskaKarta />
     </div>
   );
 }
