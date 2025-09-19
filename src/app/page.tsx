@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import type { MouseEvent } from "react";
+import type { MouseEvent, KeyboardEvent } from "react";
 import { List, ListItem } from "@/devlink/_Builtin";
 import { Cta } from "@/devlink/Cta";
 import { NiebieskaKarta } from "@/devlink";
@@ -9,17 +9,36 @@ import { NiebieskaKarta } from "@/devlink";
 export default function Home() {
   const [walletEntries, setWalletEntries] = useState<string[]>([]);
 
-  const handleConnectClick = (event: MouseEvent<HTMLAnchorElement>) => {
-    event.preventDefault();
+  const addWalletEntry = () => {
     setWalletEntries((previous) => [
       ...previous,
       `Wallet connection ${previous.length + 1}`,
     ]);
   };
 
+  const handleClick = (event: MouseEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    addWalletEntry();
+  };
+
+  const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      addWalletEntry();
+    }
+  };
+
   return (
     <div className="flex min-h-screen flex-col items-center justify-center gap-6">
-      <Cta ctaText="Connect Wallet" onClick={handleConnectClick} />
+      <div
+        role="button"
+        tabIndex={0}
+        className="cursor-pointer"
+        onClick={handleClick}
+        onKeyDown={handleKeyDown}
+      >
+        <Cta ctaText="Connect Wallet" />
+      </div>
       <List
         tag="ul"
         unstyled={false}

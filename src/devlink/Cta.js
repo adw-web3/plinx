@@ -12,7 +12,6 @@ export function Cta({
     <_Component
       className={_utils.cx(_styles, "cta")}
       button={false}
-      data-role="connect-wallet"
       block="inline"
       options={{
         href: "#",
