@@ -11,5 +11,6 @@ export * from "./utils";
 export * from "./devlink";
 export * from "./Cta";
 export * from "./DevLinkProvider";
+export * from "./Lista";
 export * from "./NavBar";
 export * from "./NiebieskaKarta";
