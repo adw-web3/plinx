@@ -16,8 +16,6 @@ export interface BSCApiResponse {
   result: Transaction[];
 }
 
-const BSC_RPC_URL = "https://bsc-dataseed1.binance.org/";
-
 // Free BSCScan API - you can get a free API key from https://bscscan.com/apis
 const BSCSCAN_API_URL = "https://api.bscscan.com/api";
 

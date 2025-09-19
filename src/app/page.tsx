@@ -19,7 +19,7 @@ export default function Home() {
     try {
       const txs = await getOutgoingTransactions(address);
       setTransactions(txs);
-    } catch (err) {
+    } catch {
       setError("Failed to fetch transactions. Please try again.");
       setTransactions([]);
     } finally {

@@ -52,7 +52,7 @@ export function TransactionList({ transactions, loading, error }: TransactionLis
         </div>
 
         <div className="divide-y divide-gray-200">
-          {transactions.map((tx, index) => (
+          {transactions.map((tx) => (
             <div key={tx.hash} className="p-6 hover:bg-gray-50">
               <div className="flex items-start justify-between">
                 <div className="flex-1 min-w-0">
