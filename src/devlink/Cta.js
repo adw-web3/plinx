@@ -7,7 +7,6 @@ import _styles from "./Cta.module.css";
 export function Cta({
   as: _Component = _Builtin.Link,
   ctaText = "Hello world",
-  ...props
 }) {
   return (
     <_Component
@@ -17,7 +16,6 @@ export function Cta({
       options={{
         href: "#",
       }}
-      {...props}
     >
       <_Builtin.Block className={_utils.cx(_styles, "text-block")} tag="div">
         {ctaText}
