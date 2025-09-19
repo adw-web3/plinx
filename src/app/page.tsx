@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { WalletInput } from "@/components/WalletInput";
 import { RecipientAnalysisComponent } from "@/components/RecipientAnalysis";
+import { LoadingProgress } from "@/components/ProgressBar";
 import { getDayvidendeRecipients, type RecipientAnalysis } from "@/lib/bsc-api";
 
 export default function Home() {
@@ -11,14 +12,19 @@ export default function Home() {
   const [error, setError] = useState("");
   const [currentWallet, setCurrentWallet] = useState("");
   const [isDemo, setIsDemo] = useState(false);
+  const [progress, setProgress] = useState({ currentStep: 0, totalSteps: 0, message: "" });
 
   const handleAddressSubmit = async (address: string) => {
     setLoading(true);
     setError("");
     setCurrentWallet(address);
+    setProgress({ currentStep: 0, totalSteps: 0, message: "" });
 
     try {
-      const result = await getDayvidendeRecipients(address);
+      const result = await getDayvidendeRecipients(address, (step, totalSteps, message) => {
+        setProgress({ currentStep: step, totalSteps, message });
+      });
+
       setRecipients(result.recipients);
       setIsDemo(result.isDemo);
 
@@ -31,6 +37,7 @@ export default function Home() {
       setIsDemo(false);
     } finally {
       setLoading(false);
+      setProgress({ currentStep: 0, totalSteps: 0, message: "" });
     }
   };
 
@@ -88,6 +95,19 @@ export default function Home() {
               )}
             </div>
           )}
+
+          <LoadingProgress
+            currentStep={progress.currentStep}
+            totalSteps={progress.totalSteps}
+            steps={[
+              "Validating API credentials...",
+              "Fetching token transfers from BSCScan...",
+              "Processing transaction data...",
+              "Analyzing recipient patterns...",
+              "Finalizing recipient analysis..."
+            ]}
+            isLoading={loading}
+          />
 
           <RecipientAnalysisComponent
             recipients={recipients}

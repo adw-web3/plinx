@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { WalletInput } from "@/components/WalletInput";
 import { TransactionList } from "@/components/TransactionList";
+import { LoadingProgress } from "@/components/ProgressBar";
 import { getOutgoingTransactions, type Transaction } from "@/lib/bsc-api";
 
 export default function Home() {
@@ -10,14 +11,19 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [currentWallet, setCurrentWallet] = useState("");
+  const [progress, setProgress] = useState({ currentStep: 0, totalSteps: 0, message: "" });
 
   const handleAddressSubmit = async (address: string) => {
     setLoading(true);
     setError("");
     setCurrentWallet(address);
+    setProgress({ currentStep: 0, totalSteps: 0, message: "" });
 
     try {
-      const result = await getOutgoingTransactions(address);
+      const result = await getOutgoingTransactions(address, (step, totalSteps, message) => {
+        setProgress({ currentStep: step, totalSteps, message });
+      });
+
       setTransactions(result.transactions);
       if (result.error) {
         setError(result.error);
@@ -27,6 +33,7 @@ export default function Home() {
       setTransactions([]);
     } finally {
       setLoading(false);
+      setProgress({ currentStep: 0, totalSteps: 0, message: "" });
     }
   };
 
@@ -58,6 +65,17 @@ export default function Home() {
               </div>
             </div>
           )}
+
+          <LoadingProgress
+            currentStep={progress.currentStep}
+            totalSteps={progress.totalSteps}
+            steps={[
+              "Validating API credentials...",
+              "Fetching transactions from BSCScan...",
+              "Processing transaction data..."
+            ]}
+            isLoading={loading}
+          />
 
           <TransactionList
             transactions={transactions}

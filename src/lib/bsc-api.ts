@@ -56,11 +56,18 @@ const BSCSCAN_API_URL = "https://api.etherscan.io/v2/api";
 const RSD_CONTRACT_ADDRESS = "0x61ed1c66239d29cc93c8597c6167159e8f69a823";
 const DAYVIDENDE_CONTRACT_ADDRESS = "0xfF1E54d02B5d0576E7BEfD03602E36d5720D1997";
 
-export async function getOutgoingTransactions(walletAddress: string): Promise<{
+export async function getOutgoingTransactions(
+  walletAddress: string,
+  onProgress?: (step: number, totalSteps: number, message: string) => void
+): Promise<{
   transactions: Transaction[];
   isDemo: boolean;
   error?: string;
 }> {
+  const totalSteps = 3;
+
+  onProgress?.(1, totalSteps, "Validating API credentials...");
+
   // Check if we have a valid API key from environment
   const apiKey = process.env.NEXT_PUBLIC_BSCSCAN_API_KEY;
 
@@ -73,6 +80,8 @@ export async function getOutgoingTransactions(walletAddress: string): Promise<{
   }
 
   try {
+    onProgress?.(2, totalSteps, "Fetching transactions from BSCScan...");
+
     const response = await fetch(
       `${BSCSCAN_API_URL}?chainid=56&module=account&action=txlist&address=${walletAddress}&startblock=0&endblock=99999999&page=1&offset=100&sort=desc&apikey=${apiKey}`
     );
@@ -92,6 +101,8 @@ export async function getOutgoingTransactions(walletAddress: string): Promise<{
       }
       throw new Error(data.message || "Failed to fetch transactions");
     }
+
+    onProgress?.(3, totalSteps, "Processing transaction data...");
 
     // Filter only outgoing transactions (where 'from' equals the wallet address)
     const outgoingTxs = data.result.filter(
@@ -168,11 +179,18 @@ export async function getRSDTokenTransfers(walletAddress: string): Promise<{
   }
 }
 
-export async function getDayvidendeRecipients(walletAddress: string): Promise<{
+export async function getDayvidendeRecipients(
+  walletAddress: string,
+  onProgress?: (step: number, totalSteps: number, message: string) => void
+): Promise<{
   recipients: RecipientAnalysis[];
   isDemo: boolean;
   error?: string;
 }> {
+  const totalSteps = 5;
+
+  onProgress?.(1, totalSteps, "Validating API credentials...");
+
   // Check if we have a valid API key from environment
   const apiKey = process.env.NEXT_PUBLIC_BSCSCAN_API_KEY;
 
@@ -185,6 +203,8 @@ export async function getDayvidendeRecipients(walletAddress: string): Promise<{
   }
 
   try {
+    onProgress?.(2, totalSteps, "Fetching token transfers from BSCScan...");
+
     // Fetch all Dayvidende token transfers FROM the specified wallet
     const response = await fetch(
       `${BSCSCAN_API_URL}?chainid=56&module=account&action=tokentx&contractaddress=${DAYVIDENDE_CONTRACT_ADDRESS}&address=${walletAddress}&page=1&offset=1000&startblock=0&endblock=99999999&sort=desc&apikey=${apiKey}`
@@ -193,6 +213,8 @@ export async function getDayvidendeRecipients(walletAddress: string): Promise<{
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
+
+    onProgress?.(3, totalSteps, "Processing transaction data...");
 
     const data: TokenTransferResponse = await response.json();
 
@@ -205,6 +227,8 @@ export async function getDayvidendeRecipients(walletAddress: string): Promise<{
       }
       throw new Error(data.message || "Failed to fetch token transfers");
     }
+
+    onProgress?.(4, totalSteps, "Analyzing recipient patterns...");
 
     // Filter only outgoing transfers (where 'from' equals the wallet address)
     const outgoingTransfers = data.result.filter(
@@ -261,6 +285,8 @@ export async function getDayvidendeRecipients(walletAddress: string): Promise<{
         });
       }
     }
+
+    onProgress?.(5, totalSteps, "Finalizing recipient analysis...");
 
     // Sort by total received (descending)
     recipients.sort((a, b) => {
