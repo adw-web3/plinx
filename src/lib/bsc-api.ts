@@ -17,7 +17,7 @@ export interface BSCApiResponse {
 }
 
 // Free BSCScan API - you can get a free API key from https://bscscan.com/apis
-const BSCSCAN_API_URL = "https://api.bscscan.com/api";
+const BSCSCAN_API_URL = "https://api.etherscan.io/v2/api";
 
 export async function getOutgoingTransactions(walletAddress: string): Promise<{
   transactions: Transaction[];
@@ -37,7 +37,7 @@ export async function getOutgoingTransactions(walletAddress: string): Promise<{
 
   try {
     const response = await fetch(
-      `${BSCSCAN_API_URL}?module=account&action=txlist&address=${walletAddress}&startblock=0&endblock=99999999&page=1&offset=100&sort=desc&apikey=${apiKey}`
+      `${BSCSCAN_API_URL}?chainid=56&module=account&action=txlist&address=${walletAddress}&startblock=0&endblock=99999999&page=1&offset=100&sort=desc&apikey=${apiKey}`
     );
 
     if (!response.ok) {
