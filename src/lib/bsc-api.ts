@@ -19,12 +19,25 @@ export interface BSCApiResponse {
 // Free BSCScan API - you can get a free API key from https://bscscan.com/apis
 const BSCSCAN_API_URL = "https://api.bscscan.com/api";
 
-export async function getOutgoingTransactions(walletAddress: string): Promise<Transaction[]> {
+export async function getOutgoingTransactions(walletAddress: string): Promise<{
+  transactions: Transaction[];
+  isDemo: boolean;
+  error?: string;
+}> {
+  // Check if we have a valid API key from environment
+  const apiKey = process.env.NEXT_PUBLIC_BSCSCAN_API_KEY;
+
+  if (!apiKey || apiKey === "YourApiKeyToken") {
+    return {
+      transactions: getMockTransactions(walletAddress),
+      isDemo: true,
+      error: "No BSCScan API key configured. Showing demo data."
+    };
+  }
+
   try {
-    // Using BSCScan API for better transaction data
-    // Note: For production, you should get a free API key from BSCScan
     const response = await fetch(
-      `${BSCSCAN_API_URL}?module=account&action=txlist&address=${walletAddress}&startblock=0&endblock=99999999&page=1&offset=100&sort=desc&apikey=YourApiKeyToken`
+      `${BSCSCAN_API_URL}?module=account&action=txlist&address=${walletAddress}&startblock=0&endblock=99999999&page=1&offset=100&sort=desc&apikey=${apiKey}`
     );
 
     if (!response.ok) {
@@ -34,6 +47,12 @@ export async function getOutgoingTransactions(walletAddress: string): Promise<Tr
     const data: BSCApiResponse = await response.json();
 
     if (data.status !== "1") {
+      if (data.message.includes("No transactions found")) {
+        return {
+          transactions: [],
+          isDemo: false
+        };
+      }
       throw new Error(data.message || "Failed to fetch transactions");
     }
 
@@ -42,12 +61,17 @@ export async function getOutgoingTransactions(walletAddress: string): Promise<Tr
       (tx) => tx.from.toLowerCase() === walletAddress.toLowerCase()
     );
 
-    return outgoingTxs;
+    return {
+      transactions: outgoingTxs,
+      isDemo: false
+    };
   } catch (error) {
     console.error("Error fetching transactions:", error);
-
-    // Fallback: Return mock data for demonstration
-    return getMockTransactions(walletAddress);
+    return {
+      transactions: [],
+      isDemo: false,
+      error: `Failed to fetch real transaction data: ${error instanceof Error ? error.message : 'Unknown error'}`
+    };
   }
 }
 
