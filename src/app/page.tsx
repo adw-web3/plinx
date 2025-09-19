@@ -3,14 +3,17 @@
 import { useState } from "react";
 import { WalletInput } from "@/components/WalletInput";
 import { TransactionList } from "@/components/TransactionList";
-import { getOutgoingTransactions, type Transaction } from "@/lib/bsc-api";
+import { TokenTransferList } from "@/components/TokenTransferList";
+import { getOutgoingTransactions, getRSDTokenTransfers, type Transaction, type TokenTransfer } from "@/lib/bsc-api";
 
 export default function Home() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [tokenTransfers, setTokenTransfers] = useState<TokenTransfer[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [currentWallet, setCurrentWallet] = useState("");
   const [isDemo, setIsDemo] = useState(false);
+  const [activeTab, setActiveTab] = useState<"transactions" | "tokens">("transactions");
 
   const handleAddressSubmit = async (address: string) => {
     setLoading(true);
@@ -18,15 +21,23 @@ export default function Home() {
     setCurrentWallet(address);
 
     try {
-      const result = await getOutgoingTransactions(address);
-      setTransactions(result.transactions);
-      setIsDemo(result.isDemo);
-      if (result.error) {
-        setError(result.error);
+      // Fetch both BNB transactions and RSD token transfers in parallel
+      const [transactionResult, tokenResult] = await Promise.all([
+        getOutgoingTransactions(address),
+        getRSDTokenTransfers(address)
+      ]);
+
+      setTransactions(transactionResult.transactions);
+      setTokenTransfers(tokenResult.transfers);
+      setIsDemo(transactionResult.isDemo || tokenResult.isDemo);
+
+      if (transactionResult.error || tokenResult.error) {
+        setError(transactionResult.error || tokenResult.error || "");
       }
     } catch {
-      setError("Failed to fetch transactions. Please try again.");
+      setError("Failed to fetch data. Please try again.");
       setTransactions([]);
+      setTokenTransfers([]);
       setIsDemo(false);
     } finally {
       setLoading(false);
@@ -38,10 +49,10 @@ export default function Home() {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            BSC Transaction Tracker
+            BSC Transaction & Token Tracker
           </h1>
           <p className="text-gray-600">
-            Enter a Binance Smart Chain wallet address to view all outgoing transactions
+            Enter a Binance Smart Chain wallet address to view outgoing BNB transactions and RSD token transfers
           </p>
         </div>
 
@@ -82,14 +93,52 @@ export default function Home() {
                   </div>
                 </div>
               )}
+
+              {/* Tab Navigation */}
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+                <div className="border-b border-gray-200">
+                  <nav className="flex">
+                    <button
+                      onClick={() => setActiveTab("transactions")}
+                      className={`px-6 py-4 text-sm font-medium border-b-2 transition-colors ${
+                        activeTab === "transactions"
+                          ? "border-blue-500 text-blue-600"
+                          : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                      }`}
+                    >
+                      BNB Transactions ({transactions.length})
+                    </button>
+                    <button
+                      onClick={() => setActiveTab("tokens")}
+                      className={`px-6 py-4 text-sm font-medium border-b-2 transition-colors ${
+                        activeTab === "tokens"
+                          ? "border-blue-500 text-blue-600"
+                          : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                      }`}
+                    >
+                      RSD Token Transfers ({tokenTransfers.length})
+                    </button>
+                  </nav>
+                </div>
+              </div>
             </div>
           )}
 
-          <TransactionList
-            transactions={transactions}
-            loading={loading}
-            error={error}
-          />
+          {currentWallet && activeTab === "transactions" && (
+            <TransactionList
+              transactions={transactions}
+              loading={loading}
+              error={error}
+            />
+          )}
+
+          {currentWallet && activeTab === "tokens" && (
+            <TokenTransferList
+              transfers={tokenTransfers}
+              loading={loading}
+              error={error}
+            />
+          )}
         </div>
       </div>
     </div>
