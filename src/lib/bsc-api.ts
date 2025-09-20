@@ -205,18 +205,49 @@ export async function getDayvidendeRecipients(
   try {
     onProgress?.(2, totalSteps, "Fetching token transfers from BSCScan...");
 
-    // Fetch all Dayvidende token transfers FROM the specified wallet
-    const response = await fetch(
-      `${BSCSCAN_API_URL}?chainid=56&module=account&action=tokentx&contractaddress=${DAYVIDENDE_CONTRACT_ADDRESS}&address=${walletAddress}&page=1&offset=1000&startblock=0&endblock=99999999&sort=desc&apikey=${apiKey}`
-    );
+    // Fetch all transfers with pagination
+    let allTransfers: TokenTransfer[] = [];
+    let page = 1;
+    const pageSize = 1000;
 
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+    while (true) {
+      const response = await fetch(
+        `${BSCSCAN_API_URL}?chainid=56&module=account&action=tokentx&contractaddress=${DAYVIDENDE_CONTRACT_ADDRESS}&address=${walletAddress}&page=${page}&offset=${pageSize}&startblock=0&endblock=99999999&sort=desc&apikey=${apiKey}`
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const pageData: TokenTransferResponse = await response.json();
+
+      if (pageData.status !== "1" || !pageData.result || pageData.result.length === 0) {
+        break; // No more results
+      }
+
+      allTransfers = allTransfers.concat(pageData.result);
+
+      // If we got less than pageSize results, we've reached the end
+      if (pageData.result.length < pageSize) {
+        break;
+      }
+
+      page++;
+
+      // Update progress
+      onProgress?.(2, totalSteps, `Fetching transfers... (page ${page}, ${allTransfers.length} total)`);
+
+      // Add small delay to avoid rate limiting
+      await new Promise(resolve => setTimeout(resolve, 200));
     }
 
     onProgress?.(3, totalSteps, "Processing transaction data...");
 
-    const data: TokenTransferResponse = await response.json();
+    const data: TokenTransferResponse = {
+      status: "1",
+      message: "OK",
+      result: allTransfers
+    };
 
     if (data.status !== "1") {
       if (data.message.includes("No transactions found")) {
