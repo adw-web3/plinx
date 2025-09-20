@@ -11,7 +11,6 @@ interface WalletInputProps {
 export function WalletInput({ onAddressSubmit, loading = false }: WalletInputProps) {
   const [address, setAddress] = useState("");
   const [contractAddress, setContractAddress] = useState("0xfF1E54d02B5d0576E7BEfD03602E36d5720D1997");
-  const [customContract, setCustomContract] = useState("");
   const [error, setError] = useState("");
 
   const validateBSCAddress = (addr: string): boolean => {
@@ -34,14 +33,12 @@ export function WalletInput({ onAddressSubmit, loading = false }: WalletInputPro
       return;
     }
 
-    const finalContractAddress = contractAddress === "custom" ? customContract : contractAddress;
-
-    if (!validateBSCAddress(finalContractAddress)) {
+    if (!validateBSCAddress(contractAddress)) {
       setError("Please enter a valid contract address (0x followed by 40 hex characters)");
       return;
     }
 
-    onAddressSubmit(address.trim(), finalContractAddress);
+    onAddressSubmit(address.trim(), contractAddress);
   };
 
   return (
@@ -72,29 +69,17 @@ export function WalletInput({ onAddressSubmit, loading = false }: WalletInputPro
             htmlFor="token-contract"
             className="block text-sm font-medium text-gray-700 mb-2"
           >
-            Token Contract
+            Token Contract Address
           </label>
-          <select
+          <input
             id="token-contract"
+            type="text"
             value={contractAddress}
             onChange={(e) => setContractAddress(e.target.value)}
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm text-gray-900 bg-gray-50"
+            placeholder="0xfF1E54d02B5d0576E7BEfD03602E36d5720D1997"
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm text-gray-900 bg-gray-50"
             disabled={loading}
-          >
-            <option value="0xfF1E54d02B5d0576E7BEfD03602E36d5720D1997">Dayvidende (DAYV)</option>
-            <option value="0x61ed1c66239d29cc93c8597c6167159e8f69a823">Reference System for DeFi (RSD)</option>
-            <option value="custom">Custom Contract Address...</option>
-          </select>
-          {contractAddress === "custom" && (
-            <input
-              type="text"
-              value={customContract}
-              placeholder="Enter custom contract address (0x...)"
-              className="w-full mt-2 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm text-gray-900 bg-gray-50"
-              onChange={(e) => setCustomContract(e.target.value)}
-              disabled={loading}
-            />
-          )}
+          />
         </div>
         <button
           type="submit"
