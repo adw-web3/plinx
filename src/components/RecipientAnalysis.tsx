@@ -15,9 +15,9 @@ export function RecipientAnalysisComponent({ recipients, totalTransfers, tokenSy
   if (loading) {
     return (
       <div className="w-full max-w-6xl">
-        <div className="animate-pulse space-y-4">
+        <div className="animate-pulse space-y-6">
           {[...Array(3)].map((_, i) => (
-            <div key={i} className="bg-gray-200 rounded-lg h-24"></div>
+            <div key={i} className="bg-white/10 backdrop-blur-sm rounded-2xl h-32 border-2 border-white/30"></div>
           ))}
         </div>
       </div>
@@ -27,8 +27,8 @@ export function RecipientAnalysisComponent({ recipients, totalTransfers, tokenSy
   if (error) {
     return (
       <div className="w-full max-w-6xl">
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-          <p className="text-red-600">{error}</p>
+        <div className="bg-red-500/20 backdrop-blur-sm border-2 border-red-400/50 rounded-2xl p-6">
+          <p className="text-red-200">{error}</p>
         </div>
       </div>
     );
@@ -37,8 +37,8 @@ export function RecipientAnalysisComponent({ recipients, totalTransfers, tokenSy
   if (recipients.length === 0) {
     return (
       <div className="w-full max-w-6xl">
-        <div className="bg-gray-50 border border-gray-200 rounded-lg p-8 text-center">
-          <p className="text-gray-600">No token recipients found for this wallet.</p>
+        <div className="bg-white/10 backdrop-blur-sm border-2 border-white/30 rounded-2xl p-8 text-center">
+          <p className="text-white/70">No token recipients found for this wallet.</p>
         </div>
       </div>
     );
@@ -55,62 +55,62 @@ export function RecipientAnalysisComponent({ recipients, totalTransfers, tokenSy
   return (
     <div className="w-full max-w-6xl space-y-6">
       {/* Summary Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <div className="text-sm font-medium text-gray-500">Total Recipients</div>
-          <div className="text-2xl font-bold text-gray-900">{recipients.length}</div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="bg-white/10 backdrop-blur-sm rounded-2xl border-2 border-white/30 p-6">
+          <div className="text-sm font-semibold text-white/70">Total Recipients</div>
+          <div className="text-3xl font-bold text-white mt-2">{recipients.length}</div>
         </div>
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <div className="text-sm font-medium text-gray-500">Total Distributed</div>
-          <div className="text-2xl font-bold text-gray-900">
-            {formatTokenValue(totalTokensDistributed.toString(), "18")} {tokenSymbol || "tokens"}
+        <div className="bg-white/10 backdrop-blur-sm rounded-2xl border-2 border-white/30 p-6">
+          <div className="text-sm font-semibold text-white/70">Total Distributed</div>
+          <div className="text-3xl font-bold text-white mt-2">
+            {formatTokenValue(totalTokensDistributed.toString(), "18")} <span className="text-lg text-white/60">{tokenSymbol || "tokens"}</span>
           </div>
         </div>
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <div className="text-sm font-medium text-gray-500">Currently Held</div>
-          <div className="text-2xl font-bold text-gray-900">
-            {formatTokenValue(totalCurrentlyHeld.toString(), "18")} {tokenSymbol || "tokens"}
+        <div className="bg-white/10 backdrop-blur-sm rounded-2xl border-2 border-white/30 p-6">
+          <div className="text-sm font-semibold text-white/70">Currently Held</div>
+          <div className="text-3xl font-bold text-white mt-2">
+            {formatTokenValue(totalCurrentlyHeld.toString(), "18")} <span className="text-lg text-white/60">{tokenSymbol || "tokens"}</span>
           </div>
         </div>
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <div className="text-sm font-medium text-gray-500">Total Airdrop Spots Claimed</div>
-          <div className="text-2xl font-bold text-gray-900">{totalTransfers}</div>
+        <div className="bg-white/10 backdrop-blur-sm rounded-2xl border-2 border-white/30 p-6">
+          <div className="text-sm font-semibold text-white/70">Total Airdrop Spots Claimed</div>
+          <div className="text-3xl font-bold text-white mt-2">{totalTransfers}</div>
         </div>
       </div>
 
       {/* Recipients List */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-        <div className="px-6 py-4 border-b border-gray-200">
-          <h2 className="text-lg font-semibold text-gray-900">
+      <div className="bg-white/10 backdrop-blur-sm rounded-2xl border-2 border-white/30 overflow-hidden">
+        <div className="px-8 py-6 border-b-2 border-white/30">
+          <h2 className="text-2xl font-bold text-white">
             Token Recipients
           </h2>
         </div>
 
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-gray-50">
+            <thead className="bg-white/5">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-4 text-left text-xs font-semibold text-white/70 uppercase tracking-wider">
                   Recipient Address
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-4 text-left text-xs font-semibold text-white/70 uppercase tracking-wider">
                   Total Received
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-4 text-left text-xs font-semibold text-white/70 uppercase tracking-wider">
                   Current Balance
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-4 text-left text-xs font-semibold text-white/70 uppercase tracking-wider">
                   Transfers
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-4 text-left text-xs font-semibold text-white/70 uppercase tracking-wider">
                   Last Transfer
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-4 text-left text-xs font-semibold text-white/70 uppercase tracking-wider">
                   Status
                 </th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className="divide-y divide-white/10">
               {recipients.map((recipient) => {
                 const currentBalance = BigInt(recipient.currentBalance);
                 const totalReceived = BigInt(recipient.totalReceived);
@@ -119,15 +119,15 @@ export function RecipientAnalysisComponent({ recipients, totalTransfers, tokenSy
                   : 0;
 
                 return (
-                  <tr key={recipient.address} className="hover:bg-gray-50">
+                  <tr key={recipient.address} className="hover:bg-white/5 transition-colors">
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center space-x-2">
-                        <span className="text-sm font-mono text-gray-900">
+                      <div className="flex items-center space-x-3">
+                        <span className="text-sm font-mono text-white">
                           {shortenAddress(recipient.address)}
                         </span>
                         <button
                           onClick={() => navigator.clipboard.writeText(recipient.address)}
-                          className="text-xs text-blue-600 hover:text-blue-800"
+                          className="text-xs text-[#517ec5] hover:text-white transition-colors"
                           title="Copy address"
                         >
                           Copy
@@ -136,41 +136,41 @@ export function RecipientAnalysisComponent({ recipients, totalTransfers, tokenSy
                           href={`https://bscscan.com/address/${recipient.address}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-xs text-blue-600 hover:text-blue-800"
+                          className="text-xs text-[#517ec5] hover:text-white transition-colors"
                         >
                           View
                         </a>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-semibold text-gray-900">
-                        {formatTokenValue(recipient.totalReceived, "18")} {tokenSymbol || "tokens"}
+                      <div className="text-sm font-semibold text-white">
+                        {formatTokenValue(recipient.totalReceived, "18")} <span className="text-white/60">{tokenSymbol || "tokens"}</span>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-semibold text-gray-900">
-                        {formatTokenValue(recipient.currentBalance, "18")} {tokenSymbol || "tokens"}
+                      <div className="text-sm font-semibold text-white">
+                        {formatTokenValue(recipient.currentBalance, "18")} <span className="text-white/60">{tokenSymbol || "tokens"}</span>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">{recipient.transferCount}</div>
+                      <div className="text-sm text-white">{recipient.transferCount}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-500">
+                      <div className="text-sm text-white/70">
                         {formatTimestamp(recipient.lastTransferTime)}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center space-x-2">
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                      <div className="flex items-center space-x-3">
+                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${
                           currentBalance > 0
-                            ? "bg-green-100 text-green-800"
-                            : "bg-gray-100 text-gray-800"
+                            ? "bg-green-500/20 text-green-300 border-2 border-green-400/50"
+                            : "bg-gray-500/20 text-gray-300 border-2 border-gray-400/50"
                         }`}>
                           {currentBalance > 0 ? "Holding" : "Sold/Transferred"}
                         </span>
                         {currentBalance > 0 && (
-                          <span className="text-xs text-gray-500">
+                          <span className="text-xs text-white/60">
                             {retentionPercentage.toFixed(1)}% retained
                           </span>
                         )}

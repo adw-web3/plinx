@@ -41,11 +41,11 @@ export function ProgressBar({
   const getColorClasses = () => {
     switch (variant) {
       case "success":
-        return "bg-green-500";
+        return "bg-green-400";
       case "warning":
-        return "bg-yellow-500";
+        return "bg-yellow-400";
       default:
-        return "bg-blue-500";
+        return "bg-[#517ec5]";
     }
   };
 
@@ -55,14 +55,14 @@ export function ProgressBar({
     <div className="w-full space-y-2">
       {message && (
         <div className="flex justify-between items-center">
-          <span className="text-sm text-gray-600">{message}</span>
+          <span className="text-sm text-white/70">{message}</span>
           {showPercentage && (
-            <span className="text-sm text-gray-500">{Math.round(clampedProgress)}%</span>
+            <span className="text-sm text-white/60">{Math.round(clampedProgress)}%</span>
           )}
         </div>
       )}
 
-      <div className={`w-full bg-gray-200 rounded-full overflow-hidden ${height}`}>
+      <div className={`w-full bg-white/20 rounded-full overflow-hidden ${height}`}>
         <div
           className={`${height} ${getColorClasses()} rounded-full transition-all duration-300 ease-out`}
           style={{ width: `${clampedProgress}%` }}
@@ -75,7 +75,7 @@ export function ProgressBar({
 
       {!message && showPercentage && (
         <div className="text-center">
-          <span className="text-sm text-gray-500">{Math.round(clampedProgress)}%</span>
+          <span className="text-sm text-white/60">{Math.round(clampedProgress)}%</span>
         </div>
       )}
     </div>
@@ -110,7 +110,7 @@ export function LoadingProgress({
 
   return (
     <div className="w-full max-w-4xl mx-auto p-4">
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+      <div className="bg-white/10 backdrop-blur-sm rounded-2xl border-2 border-white/30 p-8">
         <ProgressBar
           progress={progress}
           message={currentStepMessage}
@@ -118,7 +118,7 @@ export function LoadingProgress({
           animated={true}
         />
 
-        <div className="mt-4 space-y-2">
+        <div className="mt-6 space-y-4">
           {steps.map((step, index) => {
             const stepNumber = index + 1;
             const isCompleted = stepNumber < currentStep;
@@ -127,30 +127,28 @@ export function LoadingProgress({
             return (
               <div
                 key={index}
-                className={`flex items-center space-x-3 text-sm ${
+                className={`flex items-center space-x-4 text-sm ${
                   isCompleted
-                    ? "text-green-600"
+                    ? "text-green-300"
                     : isCurrent
-                    ? "text-blue-600 font-medium"
-                    : "text-gray-400"
+                    ? "text-white font-semibold"
+                    : "text-white/60"
                 }`}
               >
                 <div
-                  className={`w-6 h-6 rounded-full flex items-center justify-center text-xs ${
+                  className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold ${
                     isCompleted
-                      ? "bg-green-100 text-green-600"
+                      ? "bg-green-500/20 text-green-300 border-2 border-green-400/50"
                       : isCurrent
-                      ? "bg-blue-100 text-blue-600"
-                      : "bg-gray-100 text-gray-400"
+                      ? "bg-[#517ec5]/20 text-white border-2 border-[#517ec5]/60"
+                      : "bg-white/10 text-white/60 border-2 border-white/30"
                   }`}
                 >
                   {isCompleted ? "✓" : stepNumber}
                 </div>
-                <span>{step}</span>
+                <span className="flex-1">{step}</span>
                 {isCurrent && (
-                  <div className="flex-1 flex justify-end">
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-                  </div>
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-[#517ec5]"></div>
                 )}
               </div>
             );
