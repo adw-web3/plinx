@@ -9,6 +9,7 @@ import { getDayvidendeRecipients, type RecipientAnalysis } from "@/lib/bsc-api";
 export default function Home() {
   const [recipients, setRecipients] = useState<RecipientAnalysis[]>([]);
   const [totalTransfers, setTotalTransfers] = useState(0);
+  const [tokenSymbol, setTokenSymbol] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [currentWallet, setCurrentWallet] = useState("");
@@ -30,6 +31,7 @@ export default function Home() {
 
       setRecipients(result.recipients);
       setTotalTransfers(result.totalTransfers);
+      setTokenSymbol(result.tokenSymbol);
       setIsDemo(result.isDemo);
 
       if (result.error) {
@@ -39,6 +41,7 @@ export default function Home() {
       setError("Failed to fetch recipient data. Please try again.");
       setRecipients([]);
       setTotalTransfers(0);
+      setTokenSymbol("");
       setIsDemo(false);
     } finally {
       setLoading(false);
@@ -119,6 +122,7 @@ export default function Home() {
           <RecipientAnalysisComponent
             recipients={recipients}
             totalTransfers={totalTransfers}
+            tokenSymbol={tokenSymbol}
             loading={loading}
             error={error}
           />
