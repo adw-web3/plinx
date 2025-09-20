@@ -51,7 +51,7 @@ export function WalletInput({ onAddressSubmit, loading = false }: WalletInputPro
             value={address}
             onChange={(e) => setAddress(e.target.value)}
             placeholder="0x742d35Cc6635C0532925a3b8D000b73B2d9B2E9F"
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm text-gray-900 bg-gray-50"
             disabled={loading}
           />
           {error && (
