@@ -8,24 +8,28 @@ import { getDayvidendeRecipients, type RecipientAnalysis } from "@/lib/bsc-api";
 
 export default function Home() {
   const [recipients, setRecipients] = useState<RecipientAnalysis[]>([]);
+  const [totalTransfers, setTotalTransfers] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [currentWallet, setCurrentWallet] = useState("");
+  const [currentContract, setCurrentContract] = useState("");
   const [isDemo, setIsDemo] = useState(false);
   const [progress, setProgress] = useState({ currentStep: 0, totalSteps: 0, message: "" });
 
-  const handleAddressSubmit = async (address: string) => {
+  const handleAddressSubmit = async (address: string, contractAddress: string) => {
     setLoading(true);
     setError("");
     setCurrentWallet(address);
+    setCurrentContract(contractAddress);
     setProgress({ currentStep: 0, totalSteps: 0, message: "" });
 
     try {
-      const result = await getDayvidendeRecipients(address, (step, totalSteps, message) => {
+      const result = await getDayvidendeRecipients(address, contractAddress, (step, totalSteps, message) => {
         setProgress({ currentStep: step, totalSteps, message });
       });
 
       setRecipients(result.recipients);
+      setTotalTransfers(result.totalTransfers);
       setIsDemo(result.isDemo);
 
       if (result.error) {
@@ -34,6 +38,7 @@ export default function Home() {
     } catch {
       setError("Failed to fetch recipient data. Please try again.");
       setRecipients([]);
+      setTotalTransfers(0);
       setIsDemo(false);
     } finally {
       setLoading(false);
@@ -46,10 +51,10 @@ export default function Home() {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Dayvidende Token Recipients Analyzer
+            Token Recipients Analyzer
           </h1>
           <p className="text-gray-600">
-            Enter a wallet address to analyze all recipients of Dayvidende (DAYV) tokens and their current holdings
+            Enter a wallet address and select a token contract to analyze all recipients and their current holdings
           </p>
         </div>
 
@@ -66,9 +71,11 @@ export default function Home() {
                 <code className="text-sm font-mono text-gray-900 break-all">
                   {currentWallet}
                 </code>
-                <p className="text-xs text-gray-500 mt-2">
-                  Token Contract: 0xfF1E54d02B5d0576E7BEfD03602E36d5720D1997 (Dayvidende)
-                </p>
+                {currentContract && (
+                  <p className="text-xs text-gray-500 mt-2">
+                    Token Contract: {currentContract}
+                  </p>
+                )}
               </div>
 
               {isDemo && (
@@ -111,6 +118,7 @@ export default function Home() {
 
           <RecipientAnalysisComponent
             recipients={recipients}
+            totalTransfers={totalTransfers}
             loading={loading}
             error={error}
           />
