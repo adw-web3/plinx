@@ -4,13 +4,12 @@ import { useState } from "react";
 import type { FormEvent } from "react";
 
 interface WalletInputProps {
-  onAddressSubmit: (address: string, contractAddress: string) => void;
+  onAddressSubmit: (address: string) => void;
   loading?: boolean;
 }
 
 export function WalletInput({ onAddressSubmit, loading = false }: WalletInputProps) {
   const [address, setAddress] = useState("");
-  const [contractAddress, setContractAddress] = useState("0xfF1E54d02B5d0576E7BEfD03602E36d5720D1997");
   const [error, setError] = useState("");
 
   const validateBSCAddress = (addr: string): boolean => {
@@ -33,12 +32,7 @@ export function WalletInput({ onAddressSubmit, loading = false }: WalletInputPro
       return;
     }
 
-    if (!validateBSCAddress(contractAddress.trim())) {
-      setError("Please enter a valid token contract address (0x followed by 40 hex characters)");
-      return;
-    }
-
-    onAddressSubmit(address.trim(), contractAddress.trim());
+    onAddressSubmit(address.trim());
   };
 
   return (
@@ -60,27 +54,6 @@ export function WalletInput({ onAddressSubmit, loading = false }: WalletInputPro
             className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm text-gray-900 bg-gray-50"
             disabled={loading}
           />
-        </div>
-
-        <div>
-          <label
-            htmlFor="contract-address"
-            className="block text-sm font-medium text-gray-700 mb-2"
-          >
-            Token Contract Address
-          </label>
-          <input
-            id="contract-address"
-            type="text"
-            value={contractAddress}
-            onChange={(e) => setContractAddress(e.target.value)}
-            placeholder="0xfF1E54d02B5d0576E7BEfD03602E36d5720D1997"
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm text-gray-900 bg-gray-50"
-            disabled={loading}
-          />
-          <p className="mt-1 text-sm text-gray-500">
-            Default: Dayvidende (DVE) token contract
-          </p>
           {error && (
             <p className="mt-2 text-sm text-red-600">{error}</p>
           )}

@@ -8,26 +8,24 @@ import { getDayvidendeRecipients, type RecipientAnalysis } from "@/lib/bsc-api";
 
 export default function Home() {
   const [recipients, setRecipients] = useState<RecipientAnalysis[]>([]);
-  const [totalTransfers, setTotalTransfers] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [currentWallet, setCurrentWallet] = useState("");
   const [isDemo, setIsDemo] = useState(false);
   const [progress, setProgress] = useState({ currentStep: 0, totalSteps: 0, message: "" });
 
-  const handleAddressSubmit = async (address: string, contractAddress: string) => {
+  const handleAddressSubmit = async (address: string) => {
     setLoading(true);
     setError("");
     setCurrentWallet(address);
     setProgress({ currentStep: 0, totalSteps: 0, message: "" });
 
     try {
-      const result = await getDayvidendeRecipients(address, contractAddress, (step, totalSteps, message) => {
+      const result = await getDayvidendeRecipients(address, (step, totalSteps, message) => {
         setProgress({ currentStep: step, totalSteps, message });
       });
 
       setRecipients(result.recipients);
-      setTotalTransfers(result.totalTransfers);
       setIsDemo(result.isDemo);
 
       if (result.error) {
@@ -115,7 +113,6 @@ export default function Home() {
             recipients={recipients}
             loading={loading}
             error={error}
-            totalTransfers={totalTransfers}
           />
         </div>
       </div>
