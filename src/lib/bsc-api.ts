@@ -283,6 +283,8 @@ export async function getDayvidendeRecipients(
       console.log("All recipients:", outgoingTransfers.map(t => t.to));
     }
 
+    onProgress?.(4, totalSteps, `Grouping ${outgoingTransfers.length} transfers by recipient...`);
+
     // Group transfers by recipient address
     const recipientMap = new Map<string, {
       totalReceived: bigint;
@@ -290,7 +292,7 @@ export async function getDayvidendeRecipients(
       lastTransferTime: string;
     }>();
 
-    outgoingTransfers.forEach((transfer) => {
+    outgoingTransfers.forEach((transfer, index) => {
       const recipient = transfer.to.toLowerCase();
       const value = BigInt(transfer.value);
       const existing = recipientMap.get(recipient);
@@ -308,11 +310,22 @@ export async function getDayvidendeRecipients(
           lastTransferTime: transfer.timeStamp
         });
       }
+
+      // Update progress every 100 transfers
+      if (index % 100 === 0) {
+        onProgress?.(4, totalSteps, `Grouping transfers... ${index + 1}/${outgoingTransfers.length} (${recipientMap.size} unique recipients)`);
+      }
     });
+
+    onProgress?.(4, totalSteps, `Getting current balances for ${recipientMap.size} recipients...`);
 
     // Get current balances for each recipient
     const recipients: RecipientAnalysis[] = [];
-    for (const [address, data] of recipientMap) {
+    const recipientEntries = Array.from(recipientMap.entries());
+
+    for (let i = 0; i < recipientEntries.length; i++) {
+      const [address, data] = recipientEntries[i];
+
       try {
         const balance = await getTokenBalance(address, DAYVIDENDE_CONTRACT_ADDRESS);
         recipients.push({
@@ -331,6 +344,16 @@ export async function getDayvidendeRecipients(
           transferCount: data.transferCount,
           lastTransferTime: data.lastTransferTime
         });
+      }
+
+      // Update progress for balance fetching
+      if (i % 10 === 0 || i === recipientEntries.length - 1) {
+        onProgress?.(4, totalSteps, `Getting balances... ${i + 1}/${recipientEntries.length} recipients`);
+      }
+
+      // Small delay to avoid rate limiting on balance calls
+      if (i % 10 === 0 && i > 0) {
+        await new Promise(resolve => setTimeout(resolve, 100));
       }
     }
 
