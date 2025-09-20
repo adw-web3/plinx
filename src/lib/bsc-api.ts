@@ -186,6 +186,7 @@ export async function getDayvidendeRecipients(
 ): Promise<{
   recipients: RecipientAnalysis[];
   totalTransfers: number;
+  tokenSymbol: string;
   isDemo: boolean;
   error?: string;
 }> {
@@ -200,6 +201,7 @@ export async function getDayvidendeRecipients(
     return {
       recipients: getMockDayvidendeRecipients(),
       totalTransfers: 5, // Mock outgoing transfers count (3 recipients with different transfer counts)
+      tokenSymbol: "DAYV", // Mock token symbol
       isDemo: true,
       error: "No BSCScan API key configured. Showing demo data."
     };
@@ -257,6 +259,7 @@ export async function getDayvidendeRecipients(
         return {
           recipients: [],
           totalTransfers: 0,
+          tokenSymbol: "TOKEN",
           isDemo: false
         };
       }
@@ -385,9 +388,13 @@ export async function getDayvidendeRecipients(
       return aTotal > bTotal ? -1 : aTotal < bTotal ? 1 : 0;
     });
 
+    // Get token symbol from the first transfer (all transfers should have the same symbol)
+    const tokenSymbol = outgoingTransfers.length > 0 ? outgoingTransfers[0].tokenSymbol : "TOKEN";
+
     return {
       recipients,
       totalTransfers: outgoingTransfers.length,
+      tokenSymbol,
       isDemo: false
     };
   } catch (error) {
@@ -395,6 +402,7 @@ export async function getDayvidendeRecipients(
     return {
       recipients: [],
       totalTransfers: 0,
+      tokenSymbol: "TOKEN",
       isDemo: false,
       error: `Failed to fetch Dayvidende recipients: ${error instanceof Error ? error.message : 'Unknown error'}`
     };

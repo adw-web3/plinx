@@ -6,11 +6,12 @@ import { formatTokenValue, formatTimestamp, shortenAddress } from "@/lib/bsc-api
 interface RecipientAnalysisProps {
   recipients: RecipientAnalysis[];
   totalTransfers: number;
+  tokenSymbol: string;
   loading: boolean;
   error?: string;
 }
 
-export function RecipientAnalysisComponent({ recipients, totalTransfers, loading, error }: RecipientAnalysisProps) {
+export function RecipientAnalysisComponent({ recipients, totalTransfers, tokenSymbol, loading, error }: RecipientAnalysisProps) {
   if (loading) {
     return (
       <div className="w-full max-w-6xl">
@@ -62,13 +63,13 @@ export function RecipientAnalysisComponent({ recipients, totalTransfers, loading
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <div className="text-sm font-medium text-gray-500">Total Distributed</div>
           <div className="text-2xl font-bold text-gray-900">
-            {formatTokenValue(totalTokensDistributed.toString(), "18")} tokens
+            {formatTokenValue(totalTokensDistributed.toString(), "18")} {tokenSymbol || "tokens"}
           </div>
         </div>
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <div className="text-sm font-medium text-gray-500">Currently Held</div>
           <div className="text-2xl font-bold text-gray-900">
-            {formatTokenValue(totalCurrentlyHeld.toString(), "18")} tokens
+            {formatTokenValue(totalCurrentlyHeld.toString(), "18")} {tokenSymbol || "tokens"}
           </div>
         </div>
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
@@ -143,12 +144,12 @@ export function RecipientAnalysisComponent({ recipients, totalTransfers, loading
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-semibold text-gray-900">
-                        {formatTokenValue(recipient.totalReceived, "18")} tokens
+                        {formatTokenValue(recipient.totalReceived, "18")} {tokenSymbol || "tokens"}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-semibold text-gray-900">
-                        {formatTokenValue(recipient.currentBalance, "18")} tokens
+                        {formatTokenValue(recipient.currentBalance, "18")} {tokenSymbol || "tokens"}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
