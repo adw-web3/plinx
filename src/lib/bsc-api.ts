@@ -205,18 +205,49 @@ export async function getDayvidendeRecipients(
   try {
     onProgress?.(2, totalSteps, "Fetching token transfers from BSCScan...");
 
-    // Fetch all Dayvidende token transfers FROM the specified wallet
-    const response = await fetch(
-      `${BSCSCAN_API_URL}?chainid=56&module=account&action=tokentx&contractaddress=${DAYVIDENDE_CONTRACT_ADDRESS}&address=${walletAddress}&page=1&offset=1000&startblock=0&endblock=99999999&sort=desc&apikey=${apiKey}`
-    );
+    // Fetch all transfers with pagination
+    let allTransfers: TokenTransfer[] = [];
+    let page = 1;
+    const pageSize = 1000;
 
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+    while (true) {
+      const response = await fetch(
+        `${BSCSCAN_API_URL}?chainid=56&module=account&action=tokentx&contractaddress=${DAYVIDENDE_CONTRACT_ADDRESS}&address=${walletAddress}&page=${page}&offset=${pageSize}&startblock=0&endblock=99999999&sort=desc&apikey=${apiKey}`
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const pageData: TokenTransferResponse = await response.json();
+
+      if (pageData.status !== "1" || !pageData.result || pageData.result.length === 0) {
+        break; // No more results
+      }
+
+      allTransfers = allTransfers.concat(pageData.result);
+
+      // If we got less than pageSize results, we've reached the end
+      if (pageData.result.length < pageSize) {
+        break;
+      }
+
+      page++;
+
+      // Update progress
+      onProgress?.(2, totalSteps, `Fetching transfers... (page ${page}, ${allTransfers.length} total)`);
+
+      // Add small delay to avoid rate limiting
+      await new Promise(resolve => setTimeout(resolve, 200));
     }
 
     onProgress?.(3, totalSteps, "Processing transaction data...");
 
-    const data: TokenTransferResponse = await response.json();
+    const data: TokenTransferResponse = {
+      status: "1",
+      message: "OK",
+      result: allTransfers
+    };
 
     if (data.status !== "1") {
       if (data.message.includes("No transactions found")) {
@@ -230,10 +261,29 @@ export async function getDayvidendeRecipients(
 
     onProgress?.(4, totalSteps, "Analyzing recipient patterns...");
 
+    console.log(`Total transfers found: ${data.result.length}`);
+    console.log("Sample transfers:", data.result.slice(0, 3));
+
     // Filter only outgoing transfers (where 'from' equals the wallet address)
     const outgoingTransfers = data.result.filter(
       (transfer) => transfer.from.toLowerCase() === walletAddress.toLowerCase()
     );
+
+    console.log(`Outgoing transfers: ${outgoingTransfers.length}`);
+    console.log("Checking for recipient: 0x496155D31F9bA3f99502CE37f84AFeB74AA90897");
+
+    const targetRecipient = outgoingTransfers.find(
+      (transfer) => transfer.to.toLowerCase() === "0x496155D31F9bA3f99502CE37f84AFeB74AA90897".toLowerCase()
+    );
+
+    if (targetRecipient) {
+      console.log("Found target recipient transfer:", targetRecipient);
+    } else {
+      console.log("Target recipient not found in outgoing transfers");
+      console.log("All recipients:", outgoingTransfers.map(t => t.to));
+    }
+
+    onProgress?.(4, totalSteps, `Grouping ${outgoingTransfers.length} transfers by recipient...`);
 
     // Group transfers by recipient address
     const recipientMap = new Map<string, {
@@ -242,7 +292,7 @@ export async function getDayvidendeRecipients(
       lastTransferTime: string;
     }>();
 
-    outgoingTransfers.forEach((transfer) => {
+    outgoingTransfers.forEach((transfer, index) => {
       const recipient = transfer.to.toLowerCase();
       const value = BigInt(transfer.value);
       const existing = recipientMap.get(recipient);
@@ -260,13 +310,33 @@ export async function getDayvidendeRecipients(
           lastTransferTime: transfer.timeStamp
         });
       }
+
+      // Update progress every 100 transfers
+      if (index % 100 === 0) {
+        onProgress?.(4, totalSteps, `Grouping transfers... ${index + 1}/${outgoingTransfers.length} (${recipientMap.size} unique recipients)`);
+      }
     });
+
+    onProgress?.(4, totalSteps, `Getting current balances for ${recipientMap.size} recipients...`);
 
     // Get current balances for each recipient
     const recipients: RecipientAnalysis[] = [];
-    for (const [address, data] of recipientMap) {
+    const recipientEntries = Array.from(recipientMap.entries());
+
+    for (let i = 0; i < recipientEntries.length; i++) {
+      const [address, data] = recipientEntries[i];
+
       try {
         const balance = await getTokenBalance(address, DAYVIDENDE_CONTRACT_ADDRESS);
+
+        // Debug specific address
+        if (address.toLowerCase() === "0x496155d31f9ba3f99502ce37f84afeb74aa90897") {
+          console.log(`DEBUG - Address: ${address}`);
+          console.log(`DEBUG - Total received: ${data.totalReceived.toString()}`);
+          console.log(`DEBUG - Current balance from API: ${balance}`);
+          console.log(`DEBUG - Expected balance: ~0.029409 DVE`);
+        }
+
         recipients.push({
           address,
           totalReceived: data.totalReceived.toString(),
@@ -276,6 +346,12 @@ export async function getDayvidendeRecipients(
         });
       } catch (error) {
         console.error(`Failed to get balance for ${address}:`, error);
+
+        // Debug specific address errors
+        if (address.toLowerCase() === "0x496155d31f9ba3f99502ce37f84afeb74aa90897") {
+          console.log(`DEBUG - Balance fetch failed for target address: ${error}`);
+        }
+
         recipients.push({
           address,
           totalReceived: data.totalReceived.toString(),
@@ -283,6 +359,16 @@ export async function getDayvidendeRecipients(
           transferCount: data.transferCount,
           lastTransferTime: data.lastTransferTime
         });
+      }
+
+      // Update progress for balance fetching
+      if (i % 10 === 0 || i === recipientEntries.length - 1) {
+        onProgress?.(4, totalSteps, `Getting balances... ${i + 1}/${recipientEntries.length} recipients`);
+      }
+
+      // Small delay to avoid rate limiting on balance calls
+      if (i % 10 === 0 && i > 0) {
+        await new Promise(resolve => setTimeout(resolve, 100));
       }
     }
 
