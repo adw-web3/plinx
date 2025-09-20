@@ -5,11 +5,12 @@ import { formatTokenValue, formatTimestamp, shortenAddress } from "@/lib/bsc-api
 
 interface RecipientAnalysisProps {
   recipients: RecipientAnalysis[];
+  totalTransfers: number;
   loading: boolean;
   error?: string;
 }
 
-export function RecipientAnalysisComponent({ recipients, loading, error }: RecipientAnalysisProps) {
+export function RecipientAnalysisComponent({ recipients, totalTransfers, loading, error }: RecipientAnalysisProps) {
   if (loading) {
     return (
       <div className="w-full max-w-6xl">
@@ -36,7 +37,7 @@ export function RecipientAnalysisComponent({ recipients, loading, error }: Recip
     return (
       <div className="w-full max-w-6xl">
         <div className="bg-gray-50 border border-gray-200 rounded-lg p-8 text-center">
-          <p className="text-gray-600">No Dayvidende token recipients found for this wallet.</p>
+          <p className="text-gray-600">No token recipients found for this wallet.</p>
         </div>
       </div>
     );
@@ -53,7 +54,7 @@ export function RecipientAnalysisComponent({ recipients, loading, error }: Recip
   return (
     <div className="w-full max-w-6xl space-y-6">
       {/* Summary Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <div className="text-sm font-medium text-gray-500">Total Recipients</div>
           <div className="text-2xl font-bold text-gray-900">{recipients.length}</div>
@@ -61,14 +62,18 @@ export function RecipientAnalysisComponent({ recipients, loading, error }: Recip
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <div className="text-sm font-medium text-gray-500">Total Distributed</div>
           <div className="text-2xl font-bold text-gray-900">
-            {formatTokenValue(totalTokensDistributed.toString(), "18")} DAYV
+            {formatTokenValue(totalTokensDistributed.toString(), "18")} tokens
           </div>
         </div>
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <div className="text-sm font-medium text-gray-500">Currently Held</div>
           <div className="text-2xl font-bold text-gray-900">
-            {formatTokenValue(totalCurrentlyHeld.toString(), "18")} DAYV
+            {formatTokenValue(totalCurrentlyHeld.toString(), "18")} tokens
           </div>
+        </div>
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div className="text-sm font-medium text-gray-500">Total Airdrop Spots Claimed</div>
+          <div className="text-2xl font-bold text-gray-900">{totalTransfers}</div>
         </div>
       </div>
 
@@ -76,7 +81,7 @@ export function RecipientAnalysisComponent({ recipients, loading, error }: Recip
       <div className="bg-white rounded-lg shadow-sm border border-gray-200">
         <div className="px-6 py-4 border-b border-gray-200">
           <h2 className="text-lg font-semibold text-gray-900">
-            Dayvidende Token Recipients
+            Token Recipients
           </h2>
         </div>
 
@@ -138,12 +143,12 @@ export function RecipientAnalysisComponent({ recipients, loading, error }: Recip
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-semibold text-gray-900">
-                        {formatTokenValue(recipient.totalReceived, "18")} DAYV
+                        {formatTokenValue(recipient.totalReceived, "18")} tokens
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-semibold text-gray-900">
-                        {formatTokenValue(recipient.currentBalance, "18")} DAYV
+                        {formatTokenValue(recipient.currentBalance, "18")} tokens
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">

@@ -181,9 +181,11 @@ export async function getRSDTokenTransfers(walletAddress: string): Promise<{
 
 export async function getDayvidendeRecipients(
   walletAddress: string,
+  contractAddress: string = DAYVIDENDE_CONTRACT_ADDRESS,
   onProgress?: (step: number, totalSteps: number, message: string) => void
 ): Promise<{
   recipients: RecipientAnalysis[];
+  totalTransfers: number;
   isDemo: boolean;
   error?: string;
 }> {
@@ -197,6 +199,7 @@ export async function getDayvidendeRecipients(
   if (!apiKey || apiKey === "YourApiKeyToken") {
     return {
       recipients: getMockDayvidendeRecipients(),
+      totalTransfers: 6, // Mock total transfers count
       isDemo: true,
       error: "No BSCScan API key configured. Showing demo data."
     };
@@ -212,7 +215,7 @@ export async function getDayvidendeRecipients(
 
     while (true) {
       const response = await fetch(
-        `${BSCSCAN_API_URL}?chainid=56&module=account&action=tokentx&contractaddress=${DAYVIDENDE_CONTRACT_ADDRESS}&address=${walletAddress}&page=${page}&offset=${pageSize}&startblock=0&endblock=99999999&sort=desc&apikey=${apiKey}`
+        `${BSCSCAN_API_URL}?chainid=56&module=account&action=tokentx&contractaddress=${contractAddress}&address=${walletAddress}&page=${page}&offset=${pageSize}&startblock=0&endblock=99999999&sort=desc&apikey=${apiKey}`
       );
 
       if (!response.ok) {
@@ -253,6 +256,7 @@ export async function getDayvidendeRecipients(
       if (data.message.includes("No transactions found")) {
         return {
           recipients: [],
+          totalTransfers: 0,
           isDemo: false
         };
       }
@@ -327,7 +331,7 @@ export async function getDayvidendeRecipients(
       const [address, data] = recipientEntries[i];
 
       try {
-        const balance = await getTokenBalance(address, DAYVIDENDE_CONTRACT_ADDRESS);
+        const balance = await getTokenBalance(address, contractAddress);
 
         // Debug specific address
         if (address.toLowerCase() === "0x496155d31f9ba3f99502ce37f84afeb74aa90897") {
@@ -383,12 +387,14 @@ export async function getDayvidendeRecipients(
 
     return {
       recipients,
+      totalTransfers: data.result.length,
       isDemo: false
     };
   } catch (error) {
     console.error("Error fetching Dayvidende recipients:", error);
     return {
       recipients: [],
+      totalTransfers: 0,
       isDemo: false,
       error: `Failed to fetch Dayvidende recipients: ${error instanceof Error ? error.message : 'Unknown error'}`
     };
