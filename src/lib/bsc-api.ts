@@ -328,6 +328,15 @@ export async function getDayvidendeRecipients(
 
       try {
         const balance = await getTokenBalance(address, DAYVIDENDE_CONTRACT_ADDRESS);
+
+        // Debug specific address
+        if (address.toLowerCase() === "0x496155d31f9ba3f99502ce37f84afeb74aa90897") {
+          console.log(`DEBUG - Address: ${address}`);
+          console.log(`DEBUG - Total received: ${data.totalReceived.toString()}`);
+          console.log(`DEBUG - Current balance from API: ${balance}`);
+          console.log(`DEBUG - Expected balance: ~0.029409 DVE`);
+        }
+
         recipients.push({
           address,
           totalReceived: data.totalReceived.toString(),
@@ -337,6 +346,12 @@ export async function getDayvidendeRecipients(
         });
       } catch (error) {
         console.error(`Failed to get balance for ${address}:`, error);
+
+        // Debug specific address errors
+        if (address.toLowerCase() === "0x496155d31f9ba3f99502ce37f84afeb74aa90897") {
+          console.log(`DEBUG - Balance fetch failed for target address: ${error}`);
+        }
+
         recipients.push({
           address,
           totalReceived: data.totalReceived.toString(),
