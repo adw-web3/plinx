@@ -199,7 +199,7 @@ export async function getDayvidendeRecipients(
   if (!apiKey || apiKey === "YourApiKeyToken") {
     return {
       recipients: getMockDayvidendeRecipients(),
-      totalTransfers: 6, // Mock total transfers count
+      totalTransfers: 5, // Mock outgoing transfers count (3 recipients with different transfer counts)
       isDemo: true,
       error: "No BSCScan API key configured. Showing demo data."
     };
@@ -387,7 +387,7 @@ export async function getDayvidendeRecipients(
 
     return {
       recipients,
-      totalTransfers: data.result.length,
+      totalTransfers: outgoingTransfers.length,
       isDemo: false
     };
   } catch (error) {
