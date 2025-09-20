@@ -7,9 +7,10 @@ interface RecipientAnalysisProps {
   recipients: RecipientAnalysis[];
   loading: boolean;
   error?: string;
+  totalTransfers?: number;
 }
 
-export function RecipientAnalysisComponent({ recipients, loading, error }: RecipientAnalysisProps) {
+export function RecipientAnalysisComponent({ recipients, loading, error, totalTransfers }: RecipientAnalysisProps) {
   if (loading) {
     return (
       <div className="w-full max-w-6xl">
@@ -53,10 +54,14 @@ export function RecipientAnalysisComponent({ recipients, loading, error }: Recip
   return (
     <div className="w-full max-w-6xl space-y-6">
       {/* Summary Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <div className="text-sm font-medium text-gray-500">Total Recipients</div>
           <div className="text-2xl font-bold text-gray-900">{recipients.length}</div>
+        </div>
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div className="text-sm font-medium text-gray-500">Airdrop Spots Claimed</div>
+          <div className="text-2xl font-bold text-gray-900">{totalTransfers || 0}</div>
         </div>
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <div className="text-sm font-medium text-gray-500">Total Distributed</div>
