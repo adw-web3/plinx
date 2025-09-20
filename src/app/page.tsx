@@ -50,7 +50,7 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#517ec5] via-[#6b8dd6] to-[#85a2e7] py-8">
+    <div className="min-h-screen bg-[#81a1d3] py-8">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
           <h1 className="text-4xl md:text-5xl font-black text-white mb-4">
