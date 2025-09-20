@@ -230,10 +230,27 @@ export async function getDayvidendeRecipients(
 
     onProgress?.(4, totalSteps, "Analyzing recipient patterns...");
 
+    console.log(`Total transfers found: ${data.result.length}`);
+    console.log("Sample transfers:", data.result.slice(0, 3));
+
     // Filter only outgoing transfers (where 'from' equals the wallet address)
     const outgoingTransfers = data.result.filter(
       (transfer) => transfer.from.toLowerCase() === walletAddress.toLowerCase()
     );
+
+    console.log(`Outgoing transfers: ${outgoingTransfers.length}`);
+    console.log("Checking for recipient: 0x496155D31F9bA3f99502CE37f84AFeB74AA90897");
+
+    const targetRecipient = outgoingTransfers.find(
+      (transfer) => transfer.to.toLowerCase() === "0x496155D31F9bA3f99502CE37f84AFeB74AA90897".toLowerCase()
+    );
+
+    if (targetRecipient) {
+      console.log("Found target recipient transfer:", targetRecipient);
+    } else {
+      console.log("Target recipient not found in outgoing transfers");
+      console.log("All recipients:", outgoingTransfers.map(t => t.to));
+    }
 
     // Group transfers by recipient address
     const recipientMap = new Map<string, {
