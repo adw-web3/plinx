@@ -124,7 +124,7 @@ export function RecipientAnalysisComponent({ recipients, totalTransfers, tokenSy
                 const currentBalance = BigInt(recipient.currentBalance);
                 const totalReceived = BigInt(recipient.totalReceived);
                 const retentionPercentage = totalReceived > 0
-                  ? (Number(currentBalance * BigInt(100) / totalReceived))
+                  ? Math.min(100, Number(currentBalance * BigInt(100) / totalReceived))
                   : 0;
 
                 return (
