@@ -2,21 +2,48 @@
 
 import { useState } from "react";
 import type { FormEvent } from "react";
+import { BlockchainSelector, SUPPORTED_BLOCKCHAINS, type Blockchain } from "./BlockchainSelector";
+import { getDefaultContractAddress } from "@/lib/blockchain-api";
+import { validateStarknetAddress } from "@/lib/starknet-api";
 
 interface WalletInputProps {
-  onAddressSubmit: (address: string, contractAddress: string) => void;
+  onAddressSubmit: (address: string, contractAddress: string, blockchain: Blockchain) => void;
   loading?: boolean;
 }
 
+// Default wallet addresses for easy testing
+const getDefaultWalletAddress = (blockchain: Blockchain): string => {
+  switch (blockchain.id) {
+    case "bsc":
+      return "0xc7869da89109417639b4F2e8cb7215e7Aa995250";
+    case "starknet":
+      return "0x4e9f2949d40e94880c5c22f29bcb0c6c6c26d8c33b3996d0f11fe41982d1f4e";
+    default:
+      return "";
+  }
+};
+
 export function WalletInput({ onAddressSubmit, loading = false }: WalletInputProps) {
-  const [address, setAddress] = useState("");
-  const [contractAddress, setContractAddress] = useState("0xfF1E54d02B5d0576E7BEfD03602E36d5720D1997");
+  const [selectedBlockchain, setSelectedBlockchain] = useState<Blockchain>(SUPPORTED_BLOCKCHAINS[0]);
+  const [address, setAddress] = useState(getDefaultWalletAddress(SUPPORTED_BLOCKCHAINS[0]));
+  const [contractAddress, setContractAddress] = useState(getDefaultContractAddress(SUPPORTED_BLOCKCHAINS[0]));
   const [error, setError] = useState("");
 
-  const validateBSCAddress = (addr: string): boolean => {
-    // BSC addresses are 42 characters long and start with 0x
-    const bscAddressRegex = /^0x[a-fA-F0-9]{40}$/;
-    return bscAddressRegex.test(addr);
+  const validateAddress = (addr: string): boolean => {
+    if (selectedBlockchain.id === "starknet") {
+      return validateStarknetAddress(addr);
+    } else {
+      // EVM-compatible addresses (BSC, Ethereum, etc.)
+      const evmAddressRegex = /^0x[a-fA-F0-9]{40}$/;
+      return evmAddressRegex.test(addr);
+    }
+  };
+
+  const handleBlockchainChange = (blockchain: Blockchain) => {
+    setSelectedBlockchain(blockchain);
+    setContractAddress(getDefaultContractAddress(blockchain));
+    setAddress(getDefaultWalletAddress(blockchain));
+    setError("");
   };
 
   const handleSubmit = (e: FormEvent) => {
@@ -28,17 +55,23 @@ export function WalletInput({ onAddressSubmit, loading = false }: WalletInputPro
       return;
     }
 
-    if (!validateBSCAddress(address.trim())) {
-      setError("Please enter a valid BSC wallet address (0x followed by 40 hex characters)");
+    if (!validateAddress(address.trim())) {
+      const addressFormat = selectedBlockchain.id === "starknet"
+        ? "valid Starknet address (0x followed by hex characters)"
+        : "valid wallet address (0x followed by 40 hex characters)";
+      setError(`Please enter a ${addressFormat}`);
       return;
     }
 
-    if (!validateBSCAddress(contractAddress)) {
-      setError("Please enter a valid contract address (0x followed by 40 hex characters)");
+    if (!validateAddress(contractAddress)) {
+      const contractFormat = selectedBlockchain.id === "starknet"
+        ? "valid Starknet contract address (0x followed by hex characters)"
+        : "valid contract address (0x followed by 40 hex characters)";
+      setError(`Please enter a ${contractFormat}`);
       return;
     }
 
-    onAddressSubmit(address.trim(), contractAddress);
+    onAddressSubmit(address.trim(), contractAddress, selectedBlockchain);
   };
 
   return (
@@ -47,10 +80,23 @@ export function WalletInput({ onAddressSubmit, loading = false }: WalletInputPro
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
             <label
+              htmlFor="blockchain-selector"
+              className="block text-sm font-semibold text-white mb-3"
+            >
+              Select Blockchain
+            </label>
+            <BlockchainSelector
+              selectedBlockchain={selectedBlockchain}
+              onBlockchainChange={handleBlockchainChange}
+              disabled={loading}
+            />
+          </div>
+          <div>
+            <label
               htmlFor="wallet-address"
               className="block text-sm font-semibold text-white mb-3"
             >
-              BSC Wallet Address
+              {selectedBlockchain.name} Wallet Address
             </label>
             <input
               id="wallet-address"
@@ -85,9 +131,9 @@ export function WalletInput({ onAddressSubmit, loading = false }: WalletInputPro
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-[#94aeda] border-2 border-[#4f7dc4] text-white py-4 px-6 rounded-xl hover:bg-[#85a2e7] hover:border-[#406bb5] focus:ring-4 focus:ring-[#4f7dc4]/50 disabled:opacity-50 disabled:cursor-not-allowed font-semibold text-lg transform transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
+            className="w-full bg-[#517ec5] border-2 border-[#4f7dc4] text-white py-4 px-6 rounded-xl hover:bg-[#466daa] hover:border-[#406bb5] focus:ring-4 focus:ring-[#517ec5]/50 disabled:opacity-50 disabled:cursor-not-allowed font-semibold text-lg transform transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
           >
-            {loading ? "Loading Transactions..." : "Get Transactions"}
+            {loading ? "Loading Transactions..." : "Analyse AirDrop"}
           </button>
         </form>
       </div>

@@ -1,10 +1,10 @@
 "use client";
 
-import type { RecipientAnalysis } from "@/lib/bsc-api";
+import type { UnifiedRecipientAnalysis } from "@/lib/blockchain-api";
 import { formatTokenValue, formatTimestamp, shortenAddress } from "@/lib/bsc-api";
 
 interface RecipientAnalysisProps {
-  recipients: RecipientAnalysis[];
+  recipients: UnifiedRecipientAnalysis[];
   totalTransfers: number;
   tokenSymbol: string;
   loading: boolean;
@@ -12,6 +12,15 @@ interface RecipientAnalysisProps {
 }
 
 export function RecipientAnalysisComponent({ recipients, totalTransfers, tokenSymbol, loading, error }: RecipientAnalysisProps) {
+  console.log('RecipientAnalysisComponent received:', {
+    recipients: recipients.length,
+    totalTransfers,
+    tokenSymbol,
+    loading,
+    error,
+    firstRecipient: recipients[0]
+  });
+
   if (loading) {
     return (
       <div className="w-full max-w-6xl">
@@ -115,7 +124,7 @@ export function RecipientAnalysisComponent({ recipients, totalTransfers, tokenSy
                 const currentBalance = BigInt(recipient.currentBalance);
                 const totalReceived = BigInt(recipient.totalReceived);
                 const retentionPercentage = totalReceived > 0
-                  ? (Number(currentBalance * BigInt(100) / totalReceived))
+                  ? Math.min(100, Number(currentBalance * BigInt(100) / totalReceived))
                   : 0;
 
                 return (
