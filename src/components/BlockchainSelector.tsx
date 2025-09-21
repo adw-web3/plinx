@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 
 export interface Blockchain {
   id: string;
@@ -43,9 +43,25 @@ export function BlockchainSelector({
   disabled = false
 }: BlockchainSelectorProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    }
+
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => {
+        document.removeEventListener('mousedown', handleClickOutside);
+      };
+    }
+  }, [isOpen]);
 
   return (
-    <div className="relative">
+    <div className="relative" ref={dropdownRef}>
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
@@ -67,7 +83,7 @@ export function BlockchainSelector({
       </button>
 
       {isOpen && !disabled && (
-        <div className="absolute top-full left-0 right-0 mt-2 bg-white/10 backdrop-blur-sm border-2 border-white/30 rounded-xl shadow-lg z-50">
+        <div className="absolute top-full left-0 right-0 mt-2 bg-white/90 backdrop-blur-sm border-2 border-white/30 rounded-xl shadow-lg z-50">
           {SUPPORTED_BLOCKCHAINS.map((blockchain) => (
             <button
               key={blockchain.id}
@@ -75,12 +91,12 @@ export function BlockchainSelector({
                 onBlockchainChange(blockchain);
                 setIsOpen(false);
               }}
-              className="w-full px-4 py-3 text-left text-white hover:bg-white/10 transition-colors duration-200 first:rounded-t-xl last:rounded-b-xl flex items-center space-x-3"
+              className="w-full px-4 py-3 text-left text-gray-800 hover:bg-white/20 transition-colors duration-200 first:rounded-t-xl last:rounded-b-xl flex items-center space-x-3"
             >
               <div className="w-6 h-6 rounded-full bg-gradient-to-r from-blue-400 to-purple-500"></div>
               <div>
                 <div className="font-medium">{blockchain.name}</div>
-                <div className="text-sm text-white/70">{blockchain.nativeCurrency}</div>
+                <div className="text-sm text-gray-600">{blockchain.nativeCurrency}</div>
               </div>
               {blockchain.id === selectedBlockchain.id && (
                 <svg className="w-5 h-5 ml-auto text-green-400" fill="currentColor" viewBox="0 0 20 20">
