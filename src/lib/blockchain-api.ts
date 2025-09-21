@@ -50,9 +50,9 @@ export function getBlockchainExplorerUrl(blockchain: Blockchain, address: string
 export function getDefaultContractAddress(blockchain: Blockchain): string {
   switch (blockchain.id) {
     case "bsc":
-      return "0xfF1E54d02B5d0576E7BEfD03602E36d5720D1997"; // DAYVIDENDE
+      return "0x55d398326f99059fF775485246999027B3197955"; // BSC-USD (USDT)
     case "starknet":
-      return "0x0124aeb495b947201f5fac96fd1138e326ad86195b98df6dec9009158a533b49"; // LORDS token
+      return "0x0124aeb495b947201f5faC96fD1138E326AD86195B98df6DEc9009158A533B49"; // LORDS token
     default:
       return "";
   }

@@ -11,9 +11,21 @@ interface WalletInputProps {
   loading?: boolean;
 }
 
+// Default wallet addresses for easy testing
+const getDefaultWalletAddress = (blockchain: Blockchain): string => {
+  switch (blockchain.id) {
+    case "bsc":
+      return "0xc7869da89109417639b4F2e8cb7215e7Aa995250";
+    case "starknet":
+      return "0x4e9f2949d40e94880c5c22f29bcb0c6c6c26d8c33b3996d0f11fe41982d1f4e";
+    default:
+      return "";
+  }
+};
+
 export function WalletInput({ onAddressSubmit, loading = false }: WalletInputProps) {
-  const [address, setAddress] = useState("");
   const [selectedBlockchain, setSelectedBlockchain] = useState<Blockchain>(SUPPORTED_BLOCKCHAINS[0]);
+  const [address, setAddress] = useState(getDefaultWalletAddress(SUPPORTED_BLOCKCHAINS[0]));
   const [contractAddress, setContractAddress] = useState(getDefaultContractAddress(SUPPORTED_BLOCKCHAINS[0]));
   const [error, setError] = useState("");
 
@@ -30,6 +42,7 @@ export function WalletInput({ onAddressSubmit, loading = false }: WalletInputPro
   const handleBlockchainChange = (blockchain: Blockchain) => {
     setSelectedBlockchain(blockchain);
     setContractAddress(getDefaultContractAddress(blockchain));
+    setAddress(getDefaultWalletAddress(blockchain));
     setError("");
   };
 
