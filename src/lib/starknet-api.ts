@@ -1,4 +1,5 @@
 import { RpcProvider, Contract, validateAndParseAddress, hash, num } from "starknet";
+import { formatTokenValue } from "./bsc-api";
 
 export interface StarknetTransaction {
   hash: string;
@@ -456,7 +457,9 @@ export async function getStarknetTokenTransfers(
 
         try {
           const currentBalance = await getStarknetTokenBalance(address, contractAddress);
-          console.log(`Balance for ${address}: ${currentBalance}`);
+          console.log(`Balance query for ${address}:`);
+          console.log(`  - Raw balance: ${currentBalance}`);
+          console.log(`  - Formatted balance: ${formatTokenValue(currentBalance, "18")} LORDS`);
 
           // Get actual timestamp from the block
           let lastTransferTime = data.lastBlockNumber.toString();
@@ -576,14 +579,22 @@ async function getStarknetTokenBalance(walletAddress: string, contractAddress: s
 
     // Call balanceOf function
     const result = await contract.balanceOf(validatedWallet);
+    console.log(`Raw balanceOf result for ${walletAddress}:`, result);
+    console.log(`Result type:`, typeof result);
 
-    // Convert Uint256 result to string
-    // Starknet uses Uint256 for large numbers
-    if (result && typeof result === 'object' && 'low' in result && 'high' in result) {
+    // Convert result to string
+    // Handle different Starknet return formats
+    if (result && typeof result === 'object' && 'balance' in result) {
+      // Handle {balance: bigint} format
+      console.log(`Balance object format: ${result.balance.toString()}`);
+      return result.balance.toString();
+    } else if (result && typeof result === 'object' && 'low' in result && 'high' in result) {
       // Handle Uint256 structure: { low: bigint, high: bigint }
       const balance = BigInt(result.low) + (BigInt(result.high) << BigInt(128));
+      console.log(`Uint256 balance calculation: low=${result.low}, high=${result.high}, final=${balance.toString()}`);
       return balance.toString();
     } else if (typeof result === 'bigint') {
+      console.log(`Direct bigint balance: ${result.toString()}`);
       return result.toString();
     } else if (Array.isArray(result) && result.length > 0) {
       // Some contracts return array format
