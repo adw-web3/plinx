@@ -2,7 +2,7 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`webflow clou
 
 ## Getting Started
 
-First, run the Ida server:
+First, run the server:
 
 ```bash
 npm run dev
