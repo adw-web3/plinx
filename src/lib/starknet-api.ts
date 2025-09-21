@@ -234,40 +234,62 @@ export async function getStarknetTokenTransfers(
       console.log(`Raw symbol result:`, symbolResult, `Type: ${typeof symbolResult}`);
 
       // Convert felt252 to string - Starknet uses different encoding
-      if (symbolResult && typeof symbolResult === 'bigint') {
-        // Convert bigint to hex and then to ASCII
-        const hexString = symbolResult.toString(16);
-        console.log(`Symbol hex string: ${hexString}`);
+      let symbolValue: bigint | null = null;
 
-        // Try different conversion methods
+      if (symbolResult && typeof symbolResult === 'object' && 'symbol' in symbolResult) {
+        // Result is an object with symbol property
+        symbolValue = symbolResult.symbol as bigint;
+        console.log(`Symbol bigint value: ${symbolValue}`);
+      } else if (symbolResult && typeof symbolResult === 'bigint') {
+        // Direct bigint result
+        symbolValue = symbolResult;
+      } else if (Array.isArray(symbolResult) && symbolResult.length > 0) {
+        // Array result
+        symbolValue = symbolResult[0] as bigint;
+      }
+
+      if (symbolValue) {
         try {
-          // Method 1: Direct hex to ASCII
+          // Convert bigint to hex and then to ASCII
+          const hexString = symbolValue.toString(16);
+          console.log(`Symbol hex string: ${hexString}`);
+
+          // Method: Convert hex to ASCII string
           let decoded = '';
-          for (let i = 0; i < hexString.length; i += 2) {
-            const byte = parseInt(hexString.substr(i, 2), 16);
-            if (byte !== 0) decoded += String.fromCharCode(byte);
+          // Ensure even length by padding if necessary
+          const paddedHex = hexString.length % 2 === 0 ? hexString : '0' + hexString;
+
+          for (let i = 0; i < paddedHex.length; i += 2) {
+            const byte = parseInt(paddedHex.substr(i, 2), 16);
+            if (byte !== 0 && byte >= 32 && byte <= 126) { // Only printable ASCII
+              decoded += String.fromCharCode(byte);
+            }
           }
-          if (decoded) tokenSymbol = decoded;
-          console.log(`Decoded symbol (method 1): ${decoded}`);
-        } catch {
-          // Method 2: Fallback
+
+          if (decoded.length > 0) {
+            tokenSymbol = decoded;
+            console.log(`Successfully decoded symbol: ${decoded}`);
+          } else {
+            // Alternative: decode from right to left (little endian)
+            decoded = '';
+            for (let i = paddedHex.length - 2; i >= 0; i -= 2) {
+              const byte = parseInt(paddedHex.substr(i, 2), 16);
+              if (byte !== 0 && byte >= 32 && byte <= 126) {
+                decoded = String.fromCharCode(byte) + decoded;
+              }
+            }
+            if (decoded.length > 0) {
+              tokenSymbol = decoded;
+              console.log(`Successfully decoded symbol (reversed): ${decoded}`);
+            }
+          }
+        } catch (error) {
+          console.error('Error decoding symbol:', error);
           tokenSymbol = "LORDS"; // Known symbol for this contract
           console.log(`Using fallback symbol: ${tokenSymbol}`);
         }
       } else if (typeof symbolResult === 'string') {
         tokenSymbol = symbolResult;
-      } else if (Array.isArray(symbolResult) && symbolResult.length > 0) {
-        // Sometimes returns as array
-        const firstResult = symbolResult[0];
-        if (typeof firstResult === 'bigint') {
-          const hexString = firstResult.toString(16);
-          let decoded = '';
-          for (let i = 0; i < hexString.length; i += 2) {
-            const byte = parseInt(hexString.substr(i, 2), 16);
-            if (byte !== 0) decoded += String.fromCharCode(byte);
-          }
-          if (decoded) tokenSymbol = decoded;
-        }
       }
 
       console.log(`Final token symbol: ${tokenSymbol}`);
