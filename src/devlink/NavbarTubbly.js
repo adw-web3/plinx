@@ -2,9 +2,9 @@
 import React from "react";
 import * as _Builtin from "./_Builtin";
 import * as _utils from "./utils";
-import _styles from "./Navbar.module.css";
+import _styles from "./NavbarTubbly.module.css";
 
-export function Navbar({ as: _Component = _Builtin.NavbarWrapper }) {
+export function NavbarTubbly({ as: _Component = _Builtin.NavbarWrapper }) {
   return (
     <_Component
       className={_utils.cx(_styles, "navbar")}
@@ -68,7 +68,6 @@ export function Navbar({ as: _Component = _Builtin.NavbarWrapper }) {
           >
             {"Pobierz Tubbly"}
           </_Builtin.Link>
-          <_Builtin.NotSupported _atom="LocalesWrapper" />
         </_Builtin.NavbarMenu>
         <_Builtin.NavbarButton
           className={_utils.cx(_styles, "menu-button")}

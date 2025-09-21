@@ -2,9 +2,9 @@
 import React from "react";
 import * as _Builtin from "./_Builtin";
 import * as _utils from "./utils";
-import _styles from "./Footer.module.css";
+import _styles from "./FooterTubbly.module.css";
 
-export function Footer({ as: _Component = _Builtin.Section }) {
+export function FooterTubbly({ as: _Component = _Builtin.Section }) {
   return (
     <_Component
       className={_utils.cx(_styles, "section", "footer")}
@@ -145,7 +145,6 @@ export function Footer({ as: _Component = _Builtin.Section }) {
               {"DappRadar"}
             </_Builtin.Link>
           </_Builtin.Block>
-          <_Builtin.NotSupported _atom="LocalesWrapper" />
         </_Builtin.Block>
       </_Builtin.Block>
     </_Component>

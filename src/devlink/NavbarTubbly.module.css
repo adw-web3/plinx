@@ -103,22 +103,6 @@
   text-decoration: none;
 }
 
-.locales-list {
-  display: flex;
-  grid-column-gap: 10px;
-  grid-row-gap: 10px;
-}
-
-.link {
-  color: var(--white);
-  text-decoration: none;
-}
-
-.link:global(.w--current) {
-  color: hsla(217, 43.31%, 40.94%, 1.00);
-  font-weight: 800;
-}
-
 @media screen and (max-width: 479px) {
   .menu-button {
     background-color: hsla(217.33333333333334, 49.45%, 64.31%, 1.00);

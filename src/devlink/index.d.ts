@@ -10,5 +10,5 @@ export * from "./interactions";
 export * from "./utils";
 export * from "./devlink";
 export * from "./DevLinkProvider";
-export * from "./Footer";
-export * from "./Navbar";
+export * from "./FooterTubbly";
+export * from "./NavbarTubbly";
