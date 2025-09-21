@@ -131,7 +131,7 @@ export function WalletInput({ onAddressSubmit, loading = false }: WalletInputPro
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-[#94aeda] border-2 border-[#4f7dc4] text-white py-4 px-6 rounded-xl hover:bg-[#85a2e7] hover:border-[#406bb5] focus:ring-4 focus:ring-[#4f7dc4]/50 disabled:opacity-50 disabled:cursor-not-allowed font-semibold text-lg transform transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
+            className="w-full bg-[#517ec5] border-2 border-[#4f7dc4] text-white py-4 px-6 rounded-xl hover:bg-[#466daa] hover:border-[#406bb5] focus:ring-4 focus:ring-[#517ec5]/50 disabled:opacity-50 disabled:cursor-not-allowed font-semibold text-lg transform transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
           >
             {loading ? "Loading Transactions..." : "Analyse AirDrop"}
           </button>
