@@ -77,7 +77,7 @@ export function TransactionList({ transactions, loading, error }: TransactionLis
                       </span>
                       <button
                         onClick={() => navigator.clipboard.writeText(tx.to)}
-                        className="text-xs text-blue-600 hover:text-blue-800"
+                        className="text-xs text-cyan-300 hover:text-white transition-colors font-medium"
                         title="Copy address"
                       >
                         Copy
@@ -93,7 +93,7 @@ export function TransactionList({ transactions, loading, error }: TransactionLis
                         href={`https://bscscan.com/tx/${tx.hash}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-xs text-blue-600 hover:text-blue-800"
+                        className="text-xs text-cyan-300 hover:text-white transition-colors font-medium"
                       >
                         View on BSCScan
                       </a>

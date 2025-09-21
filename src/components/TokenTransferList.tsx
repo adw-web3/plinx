@@ -73,7 +73,7 @@ export function TokenTransferList({ transfers, loading, error }: TokenTransferLi
                       </span>
                       <button
                         onClick={() => navigator.clipboard.writeText(transfer.to)}
-                        className="text-xs text-blue-600 hover:text-blue-800"
+                        className="text-xs text-cyan-300 hover:text-white transition-colors font-medium"
                         title="Copy address"
                       >
                         Copy
@@ -89,7 +89,7 @@ export function TokenTransferList({ transfers, loading, error }: TokenTransferLi
                         href={`https://bscscan.com/tx/${transfer.hash}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-xs text-blue-600 hover:text-blue-800"
+                        className="text-xs text-cyan-300 hover:text-white transition-colors font-medium"
                       >
                         View on BSCScan
                       </a>
@@ -104,7 +104,7 @@ export function TokenTransferList({ transfers, loading, error }: TokenTransferLi
                         href={`https://bscscan.com/token/${transfer.contractAddress}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-xs text-blue-600 hover:text-blue-800"
+                        className="text-xs text-cyan-300 hover:text-white transition-colors font-medium"
                       >
                         View Token
                       </a>
