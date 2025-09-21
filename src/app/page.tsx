@@ -53,7 +53,7 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-[#81a1d3] py-8">
+    <div className="min-h-screen bg-[#507dc4] py-8">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
           <h1 className="text-4xl md:text-5xl font-black text-white mb-4">
@@ -137,6 +137,7 @@ export default function Home() {
             tokenSymbol={tokenSymbol}
             loading={loading}
             error={error}
+            blockchain={currentBlockchain}
           />
         </div>
       </div>

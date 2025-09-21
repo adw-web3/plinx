@@ -2,9 +2,9 @@
 import React from "react";
 import * as _Builtin from "./_Builtin";
 import * as _utils from "./utils";
-import _styles from "./NavBar.module.css";
+import _styles from "./NavbarTubbly.module.css";
 
-export function NavBar({ as: _Component = _Builtin.NavbarWrapper }) {
+export function NavbarTubbly({ as: _Component = _Builtin.NavbarWrapper }) {
   return (
     <_Component
       className={_utils.cx(_styles, "navbar")}
@@ -14,25 +14,41 @@ export function NavBar({ as: _Component = _Builtin.NavbarWrapper }) {
         collapse: "medium",
         docHeight: false,
         duration: 400,
-        easing: "ease",
+        easing: "ease-in-out",
         easing2: "ease",
         noScroll: false,
       }}
     >
-      <_Builtin.NavbarContainer tag="div">
+      <_Builtin.NavbarContainer
+        className={_utils.cx(_styles, "nav-container")}
+        tag="div"
+      >
         <_Builtin.NavbarBrand
+          className={_utils.cx(_styles, "brand")}
           options={{
             href: "#",
           }}
-        />
-        <_Builtin.NavbarMenu tag="nav" role="navigation">
+        >
+          <_Builtin.Image
+            loading="lazy"
+            width="60"
+            height="auto"
+            alt=""
+            src="https://cdn.prod.website-files.com/6833201ada7d8cb8cd426b7d/683324bee0bc0c286a1be730_Logo.png"
+          />
+        </_Builtin.NavbarBrand>
+        <_Builtin.NavbarMenu
+          className={_utils.cx(_styles, "nav-menu")}
+          tag="nav"
+          role="navigation"
+        >
           <_Builtin.NavbarLink
             className={_utils.cx(_styles, "nav-link")}
             options={{
               href: "#",
             }}
           >
-            {"1"}
+            {"Partnerzy"}
           </_Builtin.NavbarLink>
           <_Builtin.NavbarLink
             className={_utils.cx(_styles, "nav-link")}
@@ -40,18 +56,23 @@ export function NavBar({ as: _Component = _Builtin.NavbarWrapper }) {
               href: "#",
             }}
           >
-            {"2"}
+            {"Blockchain"}
           </_Builtin.NavbarLink>
-          <_Builtin.NavbarLink
-            className={_utils.cx(_styles, "nav-link")}
+          <_Builtin.Link
+            className={_utils.cx(_styles, "cta")}
+            button={true}
+            block=""
             options={{
               href: "#",
             }}
           >
-            {"3"}
-          </_Builtin.NavbarLink>
+            {"Pobierz Tubbly"}
+          </_Builtin.Link>
         </_Builtin.NavbarMenu>
-        <_Builtin.NavbarButton tag="div">
+        <_Builtin.NavbarButton
+          className={_utils.cx(_styles, "menu-button")}
+          tag="div"
+        >
           <_Builtin.Icon
             widget={{
               type: "icon",

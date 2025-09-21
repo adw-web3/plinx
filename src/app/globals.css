@@ -19,7 +19,7 @@
 }
 
 body {
-  background: var(--background);
+  background: #507dc4;
   color: var(--foreground);
   font-family: var(--font-montserrat), Arial, Helvetica, sans-serif;
 }

@@ -1,7 +1,9 @@
 "use client";
 
 import type { UnifiedRecipientAnalysis } from "@/lib/blockchain-api";
+import { getBlockchainExplorerUrl } from "@/lib/blockchain-api";
 import { formatTokenValue, formatTimestamp, shortenAddress } from "@/lib/bsc-api";
+import type { Blockchain } from "@/components/BlockchainSelector";
 
 interface RecipientAnalysisProps {
   recipients: UnifiedRecipientAnalysis[];
@@ -9,9 +11,10 @@ interface RecipientAnalysisProps {
   tokenSymbol: string;
   loading: boolean;
   error?: string;
+  blockchain: Blockchain;
 }
 
-export function RecipientAnalysisComponent({ recipients, totalTransfers, tokenSymbol, loading, error }: RecipientAnalysisProps) {
+export function RecipientAnalysisComponent({ recipients, totalTransfers, tokenSymbol, loading, error, blockchain }: RecipientAnalysisProps) {
   console.log('RecipientAnalysisComponent received:', {
     recipients: recipients.length,
     totalTransfers,
@@ -136,16 +139,16 @@ export function RecipientAnalysisComponent({ recipients, totalTransfers, tokenSy
                         </span>
                         <button
                           onClick={() => navigator.clipboard.writeText(recipient.address)}
-                          className="text-xs text-[#517ec5] hover:text-white transition-colors"
+                          className="text-xs text-cyan-300 hover:text-white transition-colors font-medium"
                           title="Copy address"
                         >
                           Copy
                         </button>
                         <a
-                          href={`https://bscscan.com/address/${recipient.address}`}
+                          href={getBlockchainExplorerUrl(blockchain, recipient.address)}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-xs text-[#517ec5] hover:text-white transition-colors"
+                          className="text-xs text-cyan-300 hover:text-white transition-colors font-medium"
                         >
                           View
                         </a>

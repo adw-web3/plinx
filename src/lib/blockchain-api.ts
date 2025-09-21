@@ -47,6 +47,28 @@ export function getBlockchainExplorerUrl(blockchain: Blockchain, address: string
   }
 }
 
+export function getBlockchainTransactionUrl(blockchain: Blockchain, txHash: string): string {
+  switch (blockchain.id) {
+    case "bsc":
+      return `${blockchain.explorerUrl}/tx/${txHash}`;
+    case "starknet":
+      return `${blockchain.explorerUrl}/tx/${txHash}`;
+    default:
+      return "#";
+  }
+}
+
+export function getBlockchainTokenUrl(blockchain: Blockchain, contractAddress: string): string {
+  switch (blockchain.id) {
+    case "bsc":
+      return `${blockchain.explorerUrl}/token/${contractAddress}`;
+    case "starknet":
+      return `${blockchain.explorerUrl}/contract/${contractAddress}`;
+    default:
+      return "#";
+  }
+}
+
 export function getDefaultContractAddress(blockchain: Blockchain): string {
   switch (blockchain.id) {
     case "bsc":
