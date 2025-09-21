@@ -468,7 +468,7 @@ export async function getStarknetTokenTransfers(
             if (blockDetails.timestamp) {
               lastTransferTime = blockDetails.timestamp.toString();
             }
-          } catch (blockError) {
+          } catch {
             console.warn(`Could not get timestamp for block ${data.lastBlockNumber}, using block number`);
           }
 
@@ -491,7 +491,7 @@ export async function getStarknetTokenTransfers(
             if (blockDetails.timestamp) {
               lastTransferTime = blockDetails.timestamp.toString();
             }
-          } catch (blockError) {
+          } catch {
             console.warn(`Could not get timestamp for block ${data.lastBlockNumber}, using block number`);
           }
 
