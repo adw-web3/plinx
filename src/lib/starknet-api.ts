@@ -336,8 +336,8 @@ export async function getStarknetTokenTransfers(
       const currentBlock = await provider.getBlock('latest');
       const transferEventHash = getTransferEventHash();
 
-      // Calculate block range (last 1000 blocks or from block 1, whichever is higher)
-      const fromBlock = Math.max(1, currentBlock.block_number - 1000);
+      // Calculate block range (last 10000 blocks or from block 1, whichever is higher)
+      const fromBlock = Math.max(1, currentBlock.block_number - 10000);
 
       console.log(`Fetching Transfer events from block ${fromBlock} to ${currentBlock.block_number}`);
 
@@ -347,7 +347,7 @@ export async function getStarknetTokenTransfers(
       let allEvents: StarknetEvent[] = [];
       let continuationToken: string | undefined;
       let pageCount = 0;
-      const maxPages = 10; // Limit to prevent infinite loops
+      const maxPages = 50; // Increase limit to capture more historical data
 
       do {
         const eventsResponse = await provider.getEvents({
@@ -458,21 +458,46 @@ export async function getStarknetTokenTransfers(
           const currentBalance = await getStarknetTokenBalance(address, contractAddress);
           console.log(`Balance for ${address}: ${currentBalance}`);
 
-          recipients.push({
+          // Get actual timestamp from the block
+          let lastTransferTime = data.lastBlockNumber.toString();
+          try {
+            const blockDetails = await provider.getBlock(data.lastBlockNumber);
+            if (blockDetails.timestamp) {
+              lastTransferTime = blockDetails.timestamp.toString();
+            }
+          } catch (blockError) {
+            console.warn(`Could not get timestamp for block ${data.lastBlockNumber}, using block number`);
+          }
+
+          const recipientData = {
             address,
             totalReceived: data.totalReceived.toString(),
             currentBalance,
             transferCount: data.transferCount,
-            lastTransferTime: data.lastBlockNumber.toString() // Using block number as timestamp
-          });
+            lastTransferTime
+          };
+          console.log(`✅ Created recipient data:`, recipientData);
+          recipients.push(recipientData);
         } catch (balanceError) {
           console.error(`Failed to get balance for ${address}:`, balanceError);
+
+          // Get actual timestamp from the block
+          let lastTransferTime = data.lastBlockNumber.toString();
+          try {
+            const blockDetails = await provider.getBlock(data.lastBlockNumber);
+            if (blockDetails.timestamp) {
+              lastTransferTime = blockDetails.timestamp.toString();
+            }
+          } catch (blockError) {
+            console.warn(`Could not get timestamp for block ${data.lastBlockNumber}, using block number`);
+          }
+
           recipients.push({
             address,
             totalReceived: data.totalReceived.toString(),
             currentBalance: "0",
             transferCount: data.transferCount,
-            lastTransferTime: data.lastBlockNumber.toString()
+            lastTransferTime
           });
         }
       }
@@ -486,15 +511,25 @@ export async function getStarknetTokenTransfers(
         return aTotal > bTotal ? -1 : aTotal < bTotal ? 1 : 0;
       });
 
-      return {
+      const result = {
         recipients,
         totalTransfers: outgoingTransfers.length,
         tokenSymbol,
         isDemo: false
       };
 
+      console.log("✅ Returning REAL Starknet data:", result);
+      return result;
+
     } catch (eventError) {
       console.error("Error fetching Transfer events:", eventError);
+      console.error("Event error details:", {
+        error: eventError,
+        message: eventError instanceof Error ? eventError.message : 'Unknown error',
+        stack: eventError instanceof Error ? eventError.stack : undefined,
+        contractAddress,
+        walletAddress
+      });
 
       onProgress?.(5, totalSteps, "Event querying failed - using demo data...");
 
