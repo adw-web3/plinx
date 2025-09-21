@@ -4,28 +4,31 @@ import { useState } from "react";
 import { WalletInput } from "@/components/WalletInput";
 import { RecipientAnalysisComponent } from "@/components/RecipientAnalysis";
 import { LoadingProgress } from "@/components/ProgressBar";
-import { getDayvidendeRecipients, type RecipientAnalysis } from "@/lib/bsc-api";
+import { getTokenRecipients, type UnifiedRecipientAnalysis } from "@/lib/blockchain-api";
+import { SUPPORTED_BLOCKCHAINS, type Blockchain } from "@/components/BlockchainSelector";
 
 export default function Home() {
-  const [recipients, setRecipients] = useState<RecipientAnalysis[]>([]);
+  const [recipients, setRecipients] = useState<UnifiedRecipientAnalysis[]>([]);
   const [totalTransfers, setTotalTransfers] = useState(0);
   const [tokenSymbol, setTokenSymbol] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [currentWallet, setCurrentWallet] = useState("");
   const [currentContract, setCurrentContract] = useState("");
+  const [currentBlockchain, setCurrentBlockchain] = useState<Blockchain>(SUPPORTED_BLOCKCHAINS[0]);
   const [isDemo, setIsDemo] = useState(false);
   const [progress, setProgress] = useState({ currentStep: 0, totalSteps: 0, message: "" });
 
-  const handleAddressSubmit = async (address: string, contractAddress: string) => {
+  const handleAddressSubmit = async (address: string, contractAddress: string, blockchain: Blockchain) => {
     setLoading(true);
     setError("");
     setCurrentWallet(address);
     setCurrentContract(contractAddress);
+    setCurrentBlockchain(blockchain);
     setProgress({ currentStep: 0, totalSteps: 0, message: "" });
 
     try {
-      const result = await getDayvidendeRecipients(address, contractAddress, (step, totalSteps, message) => {
+      const result = await getTokenRecipients(blockchain, address, contractAddress, (step, totalSteps, message) => {
         setProgress({ currentStep: step, totalSteps, message });
       });
 
@@ -70,7 +73,7 @@ export default function Home() {
           {currentWallet && (
             <div className="w-full max-w-6xl space-y-6">
               <div className="bg-white/10 backdrop-blur-sm rounded-2xl border-2 border-white/30 p-6">
-                <h3 className="text-sm font-medium text-white/70 mb-2">Analyzing wallet:</h3>
+                <h3 className="text-sm font-medium text-white/70 mb-2">Analyzing wallet on {currentBlockchain.name}:</h3>
                 <code className="text-sm font-mono text-white break-all bg-black/20 p-3 rounded-lg block">
                   {currentWallet}
                 </code>
@@ -94,8 +97,17 @@ export default function Home() {
                       <div className="mt-3 text-yellow-200">
                         <p className="mb-3">You&apos;re seeing demo data. To get real recipient analysis:</p>
                         <ol className="list-decimal list-inside space-y-2">
-                          <li>Get a free API key from <a href="https://bscscan.com/apis" target="_blank" rel="noopener noreferrer" className="underline hover:text-yellow-100 transition-colors">BSCScan</a></li>
-                          <li>Add <code className="bg-black/30 px-2 py-1 rounded font-mono text-sm">NEXT_PUBLIC_BSCSCAN_API_KEY=your_api_key</code> to your .env file</li>
+                          {currentBlockchain.id === "bsc" ? (
+                            <>
+                              <li>Get a free API key from <a href="https://bscscan.com/apis" target="_blank" rel="noopener noreferrer" className="underline hover:text-yellow-100 transition-colors">BSCScan</a></li>
+                              <li>Add <code className="bg-black/30 px-2 py-1 rounded font-mono text-sm">NEXT_PUBLIC_BSCSCAN_API_KEY=your_api_key</code> to your .env file</li>
+                            </>
+                          ) : (
+                            <>
+                              <li>Get access to Starknet API services</li>
+                              <li>Add <code className="bg-black/30 px-2 py-1 rounded font-mono text-sm">NEXT_PUBLIC_STARKNET_API_KEY=your_api_key</code> to your .env file</li>
+                            </>
+                          )}
                           <li>Restart the application</li>
                         </ol>
                       </div>
@@ -111,7 +123,7 @@ export default function Home() {
             totalSteps={progress.totalSteps}
             steps={[
               "Validating API credentials...",
-              "Fetching token transfers from BSCScan...",
+              `Fetching token transfers from ${currentBlockchain.name}...`,
               "Processing transaction data...",
               "Analyzing recipient patterns...",
               "Finalizing recipient analysis..."
