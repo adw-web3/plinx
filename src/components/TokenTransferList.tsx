@@ -2,6 +2,8 @@
 
 import type { TokenTransfer } from "@/lib/bsc-api";
 import { formatTokenValue, formatTimestamp, shortenAddress } from "@/lib/bsc-api";
+import { SUPPORTED_BLOCKCHAINS } from "@/components/BlockchainSelector";
+import { getBlockchainTransactionUrl, getBlockchainTokenUrl } from "@/lib/blockchain-api";
 
 interface TokenTransferListProps {
   transfers: TokenTransfer[];
@@ -10,6 +12,8 @@ interface TokenTransferListProps {
 }
 
 export function TokenTransferList({ transfers, loading, error }: TokenTransferListProps) {
+  // This component is currently BSC-specific, so we use the BSC blockchain
+  const bscBlockchain = SUPPORTED_BLOCKCHAINS.find(b => b.id === 'bsc')!;
   if (loading) {
     return (
       <div className="w-full max-w-4xl">
@@ -86,12 +90,12 @@ export function TokenTransferList({ transfers, loading, error }: TokenTransferLi
                         {shortenAddress(transfer.hash)}
                       </span>
                       <a
-                        href={`https://bscscan.com/tx/${transfer.hash}`}
+                        href={getBlockchainTransactionUrl(bscBlockchain, transfer.hash)}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-xs text-cyan-300 hover:text-white transition-colors font-medium"
                       >
-                        View on BSCScan
+                        View on {bscBlockchain.name} Explorer
                       </a>
                     </div>
 
@@ -101,7 +105,7 @@ export function TokenTransferList({ transfers, loading, error }: TokenTransferLi
                         {shortenAddress(transfer.contractAddress)}
                       </span>
                       <a
-                        href={`https://bscscan.com/token/${transfer.contractAddress}`}
+                        href={getBlockchainTokenUrl(bscBlockchain, transfer.contractAddress)}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-xs text-cyan-300 hover:text-white transition-colors font-medium"

@@ -137,6 +137,7 @@ export default function Home() {
             tokenSymbol={tokenSymbol}
             loading={loading}
             error={error}
+            blockchain={currentBlockchain}
           />
         </div>
       </div>

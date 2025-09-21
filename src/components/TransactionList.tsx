@@ -2,6 +2,8 @@
 
 import type { Transaction } from "@/lib/bsc-api";
 import { formatBNBValue, formatTimestamp, shortenAddress } from "@/lib/bsc-api";
+import { SUPPORTED_BLOCKCHAINS } from "@/components/BlockchainSelector";
+import { getBlockchainTransactionUrl } from "@/lib/blockchain-api";
 
 interface TransactionListProps {
   transactions: Transaction[];
@@ -10,6 +12,8 @@ interface TransactionListProps {
 }
 
 export function TransactionList({ transactions, loading, error }: TransactionListProps) {
+  // This component is currently BSC-specific, so we use the BSC blockchain
+  const bscBlockchain = SUPPORTED_BLOCKCHAINS.find(b => b.id === 'bsc')!;
   if (loading) {
     return (
       <div className="w-full max-w-4xl">
@@ -90,12 +94,12 @@ export function TransactionList({ transactions, loading, error }: TransactionLis
                         {shortenAddress(tx.hash)}
                       </span>
                       <a
-                        href={`https://bscscan.com/tx/${tx.hash}`}
+                        href={getBlockchainTransactionUrl(bscBlockchain, tx.hash)}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-xs text-cyan-300 hover:text-white transition-colors font-medium"
                       >
-                        View on BSCScan
+                        View on {bscBlockchain.name} Explorer
                       </a>
                     </div>
 
