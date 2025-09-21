@@ -219,20 +219,8 @@ export async function getStarknetTokenTransfers(
     console.log(`Processing Starknet wallet: ${walletAddress} (normalized: ${validatedWallet})`);
     console.log(`Processing Starknet contract: ${contractAddress} (normalized: ${validatedContract})`);
 
-    // Initialize provider and check wallet existence
-    const provider = getStarknetProvider();
-
-    // Check if the wallet exists and has activity
-    try {
-      const nonce = await provider.getNonce(validatedWallet);
-      console.log(`Wallet nonce: ${nonce} (indicates ${nonce > 0 ? 'active' : 'inactive/new'} wallet)`);
-
-      if (nonce === 0) {
-        console.warn(`⚠️  Wallet ${validatedWallet} appears to be inactive or new (nonce=0)`);
-      }
-    } catch (nonceError) {
-      console.warn(`Could not get nonce for wallet ${validatedWallet}:`, nonceError);
-    }
+    // Initialize provider for future use
+    getStarknetProvider();
 
     onProgress?.(2, totalSteps, "Fetching token transfers from Starknet...");
 
