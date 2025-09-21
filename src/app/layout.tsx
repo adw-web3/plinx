@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono, Inter, Montserrat } from "next/font/google";
 import "./globals.css";
 import { DevLinkProvider } from "@/devlink/DevLinkProvider";
+import { NavbarTubbly } from "@/devlink/NavbarTubbly";
+import { FooterTubbly } from "@/devlink/FooterTubbly";
 
 const montserrat = Montserrat({
   subsets: ["latin"],
@@ -39,9 +41,9 @@ export default function RootLayout({
         className={`${montserrat.variable} ${geistSans.variable} ${geistMono.variable} ${inter.variable} antialiased`}
       >
         <DevLinkProvider>
-          {/* Add here any Navbar or Header you want to be present on all pages */}
+          <NavbarTubbly />
           {children}
-          {/* Add here any Footer you want to be present on all pages */}
+          <FooterTubbly />
         </DevLinkProvider>
       </body>
     </html>
