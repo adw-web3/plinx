@@ -136,7 +136,7 @@ export function RecipientAnalysisComponent({ recipients, totalTransfers, tokenSy
                         </span>
                         <button
                           onClick={() => navigator.clipboard.writeText(recipient.address)}
-                          className="text-xs text-[#517ec5] hover:text-white transition-colors"
+                          className="text-xs text-cyan-300 hover:text-white transition-colors font-medium"
                           title="Copy address"
                         >
                           Copy
@@ -145,7 +145,7 @@ export function RecipientAnalysisComponent({ recipients, totalTransfers, tokenSy
                           href={`https://bscscan.com/address/${recipient.address}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-xs text-[#517ec5] hover:text-white transition-colors"
+                          className="text-xs text-cyan-300 hover:text-white transition-colors font-medium"
                         >
                           View
                         </a>
