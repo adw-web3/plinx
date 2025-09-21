@@ -1,0 +1,132 @@
+.navbar {
+  padding: 20px;
+  background-color: hsla(0, 0.00%, 86.67%, 0.00);
+}
+
+@media screen and (max-width: 479px) {
+  .navbar {
+    padding-bottom: 0px;
+  }
+}
+
+.nav-container {
+  max-width: 1200px;
+  padding: 20px;
+  border: 2px solid var(--white-10);
+  border-radius: 20px;
+  background-color: var(--white-20);
+}
+
+@media screen and (max-width: 479px) {
+  .nav-container {
+    padding: 10px;
+  }
+}
+
+@media screen and (max-width: 479px) {
+  .brand {
+    padding-left: 0px;
+  }
+}
+
+.nav-menu {
+  display: flex;
+  align-items: center;
+}
+
+@media screen and (max-width: 479px) {
+  .nav-menu {
+    padding-bottom: 30px;
+    padding-left: 20px;
+
+    border-bottom: 1px solid var(--white-20);
+    border-bottom-left-radius: 30px;
+    border-bottom-right-radius: 30px;
+
+    background-color: var(--niebieski);
+  }
+}
+
+.nav-link {
+  color: var(--white);
+  font-size: 18px;
+  line-height: 100%;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.nav-link:hover {
+  color: var(--niebieski);
+}
+
+.nav-link:global(.w--current) {
+  color: var(--white);
+  font-weight: 700;
+}
+
+@media screen and (max-width: 479px) {
+  .nav-link {
+    text-align: center;
+  }
+}
+
+@media screen and (max-width: 479px) {
+  .nav-link.text-link {
+    margin-top: 10px;
+    text-align: center;
+  }
+}
+
+.hide {
+  display: none;
+}
+
+@media screen and (max-width: 479px) {
+  .hide {
+    display: flex;
+    margin-top: 20px;
+    justify-content: center;
+    align-items: center;
+  }
+}
+
+.cta {
+  padding: 15px 20px;
+
+  border: 2px solid var(--niebieski);
+  border-radius: 15px;
+
+  background-color: hsla(208.00000000000003, 0.00%, 100.00%, 0.20);
+
+  line-height: 100%;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.locales-list {
+  display: flex;
+  grid-column-gap: 10px;
+  grid-row-gap: 10px;
+}
+
+.link {
+  color: var(--white);
+  text-decoration: none;
+}
+
+.link:global(.w--current) {
+  color: hsla(217, 43.31%, 40.94%, 1.00);
+  font-weight: 800;
+}
+
+@media screen and (max-width: 479px) {
+  .menu-button {
+    background-color: hsla(217.33333333333334, 49.45%, 64.31%, 1.00);
+  }
+}
+
+@media screen and (max-width: 479px) {
+  .menu-button:global(.w--open) {
+    background-color: hsla(217.07865168539328, 49.17%, 64.51%, 1.00);
+  }
+}
