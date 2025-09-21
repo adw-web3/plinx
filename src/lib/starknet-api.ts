@@ -213,8 +213,11 @@ export async function getStarknetTokenTransfers(
 
   try {
     // Validate addresses
-    validateAndParseAddress(walletAddress);
-    validateAndParseAddress(contractAddress);
+    const validatedWallet = validateAndParseAddress(walletAddress);
+    const validatedContract = validateAndParseAddress(contractAddress);
+
+    console.log(`Processing Starknet wallet: ${walletAddress} (normalized: ${validatedWallet})`);
+    console.log(`Processing Starknet contract: ${contractAddress} (normalized: ${validatedContract})`);
 
     // Initialize provider for future use
     getStarknetProvider();
@@ -337,8 +340,9 @@ export async function getStarknetTokenTransfers(
       const currentBlock = await provider.getBlock('latest');
       const transferEventHash = getTransferEventHash();
 
-      // Calculate block range (last 10000 blocks or from block 1, whichever is higher)
-      const fromBlock = Math.max(1, currentBlock.block_number - 10000);
+      // Calculate block range (last 100000 blocks or from block 1, whichever is higher)
+      // This covers approximately 1-2 years of transaction history
+      const fromBlock = Math.max(1, currentBlock.block_number - 100000);
 
       console.log(`Fetching Transfer events from block ${fromBlock} to ${currentBlock.block_number}`);
 
@@ -348,7 +352,7 @@ export async function getStarknetTokenTransfers(
       let allEvents: StarknetEvent[] = [];
       let continuationToken: string | undefined;
       let pageCount = 0;
-      const maxPages = 50; // Increase limit to capture more historical data
+      const maxPages = 100; // Increase limit to capture more historical data
 
       do {
         const eventsResponse = await provider.getEvents({
@@ -420,6 +424,23 @@ export async function getStarknetTokenTransfers(
       }
 
       console.log(`Found ${outgoingTransfers.length} outgoing transfers from ${walletAddress}`);
+
+      if (outgoingTransfers.length === 0) {
+        console.warn(`❌ No outgoing transfers found for wallet ${walletAddress}`);
+        console.warn(`This could mean:`);
+        console.warn(`  - The wallet has never sent tokens of this type`);
+        console.warn(`  - The transfers are outside our block range (last 50,000 blocks)`);
+        console.warn(`  - The wallet address or contract address is incorrect`);
+        console.warn(`  - The wallet uses a different transfer pattern`);
+
+        return {
+          recipients: [],
+          totalTransfers: 0,
+          tokenSymbol,
+          isDemo: false,
+          error: `No outgoing transfers found for this wallet. The wallet may be inactive, have no transfers of this token type, or transfers may be outside the searched block range (last 50,000 blocks).`
+        };
+      }
 
       onProgress?.(5, totalSteps, "Analyzing recipients and fetching current balances...");
 
