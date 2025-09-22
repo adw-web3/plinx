@@ -41,7 +41,12 @@ export default function RootLayout({
         className={`${montserrat.variable} ${geistSans.variable} ${geistMono.variable} ${inter.variable} antialiased`}
       >
         <DevLinkProvider>
-          <NavbarTubbly />
+          <NavbarTubbly
+            navlinkPartnersLink={{ href: "/en/partnerzy" }}
+            navlinkBlockchain={{ href: "/en/blockchain" }}
+            navlinkDownload={{ href: "/en/download" }}
+            navlinkLogoHome={{ href: "/en" }}
+          />
           {children}
           <FooterTubbly />
         </DevLinkProvider>
