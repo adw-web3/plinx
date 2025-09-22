@@ -144,6 +144,18 @@ export function FooterTubbly({ as: _Component = _Builtin.Section }) {
             >
               {"DappRadar"}
             </_Builtin.Link>
+            <_Builtin.Block className={_utils.cx(_styles, "dot")} tag="div" />
+            <_Builtin.Link
+              className={_utils.cx(_styles, "footer-link")}
+              button={false}
+              block=""
+              options={{
+                href: "https://www.tubbly.io/plinx-analytics",
+                target: "_blank",
+              }}
+            >
+              {"Plinx Analytics"}
+            </_Builtin.Link>
           </_Builtin.Block>
         </_Builtin.Block>
       </_Builtin.Block>
