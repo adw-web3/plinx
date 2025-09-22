@@ -4,7 +4,29 @@ import * as _Builtin from "./_Builtin";
 import * as _utils from "./utils";
 import _styles from "./NavbarTubbly.module.css";
 
-export function NavbarTubbly({ as: _Component = _Builtin.NavbarWrapper }) {
+export function NavbarTubbly({
+  as: _Component = _Builtin.NavbarWrapper,
+
+  navlinkPartnersLink = {
+    href: "#",
+  },
+
+  navlinkBlockchain = {
+    href: "#",
+  },
+
+  navlinkDownload = {
+    href: "#",
+  },
+
+  navlinkLogoHome = {
+    href: "#",
+  },
+
+  navlinkPartnersName = "Partnerzy",
+  navlinkBlockchainName = "Blockchain",
+  navlinkDownloadName = "Pobierz Tubbly",
+}) {
   return (
     <_Component
       className={_utils.cx(_styles, "navbar")}
@@ -25,9 +47,7 @@ export function NavbarTubbly({ as: _Component = _Builtin.NavbarWrapper }) {
       >
         <_Builtin.NavbarBrand
           className={_utils.cx(_styles, "brand")}
-          options={{
-            href: "#",
-          }}
+          options={navlinkLogoHome}
         >
           <_Builtin.Image
             loading="lazy"
@@ -44,29 +64,23 @@ export function NavbarTubbly({ as: _Component = _Builtin.NavbarWrapper }) {
         >
           <_Builtin.NavbarLink
             className={_utils.cx(_styles, "nav-link")}
-            options={{
-              href: "#",
-            }}
+            options={navlinkPartnersLink}
           >
-            {"Partnerzy"}
+            {navlinkPartnersName}
           </_Builtin.NavbarLink>
           <_Builtin.NavbarLink
             className={_utils.cx(_styles, "nav-link")}
-            options={{
-              href: "#",
-            }}
+            options={navlinkBlockchain}
           >
-            {"Blockchain"}
+            {navlinkBlockchainName}
           </_Builtin.NavbarLink>
           <_Builtin.Link
             className={_utils.cx(_styles, "cta")}
             button={true}
             block=""
-            options={{
-              href: "#",
-            }}
+            options={navlinkDownload}
           >
-            {"Pobierz Tubbly"}
+            {navlinkDownloadName}
           </_Builtin.Link>
         </_Builtin.NavbarMenu>
         <_Builtin.NavbarButton
