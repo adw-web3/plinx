@@ -97,7 +97,6 @@ interface LoadingProgressProps {
 
 export function LoadingProgress({
   currentStep,
-  totalSteps,
   steps,
   isLoading,
   progressMessage
@@ -114,7 +113,6 @@ export function LoadingProgress({
             const stepNumber = index + 1;
             const isCompleted = stepNumber < currentStep;
             const isCurrent = stepNumber === currentStep;
-            const isPending = stepNumber > currentStep;
 
             // Calculate progress for current step based on progressMessage
             let stepProgress = 0;
