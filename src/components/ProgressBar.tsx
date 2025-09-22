@@ -91,19 +91,17 @@ interface LoadingProgressProps {
   steps: string[];
   /** Whether loading is active */
   isLoading: boolean;
+  /** Additional progress message from the API */
+  progressMessage?: string;
 }
 
 export function LoadingProgress({
   currentStep,
   totalSteps,
   steps,
-  isLoading
+  isLoading,
+  progressMessage
 }: LoadingProgressProps) {
-  const progress = totalSteps > 0 ? (currentStep / totalSteps) * 100 : 0;
-  const currentStepMessage = currentStep > 0 && currentStep <= steps.length
-    ? steps[currentStep - 1]
-    : "Initializing...";
-
   if (!isLoading) {
     return null;
   }
@@ -111,45 +109,91 @@ export function LoadingProgress({
   return (
     <div className="w-full max-w-4xl mx-auto p-4">
       <div className="bg-white/10 backdrop-blur-sm rounded-2xl border-2 border-white/30 p-8">
-        <ProgressBar
-          progress={progress}
-          message={currentStepMessage}
-          variant="primary"
-          animated={true}
-        />
-
-        <div className="mt-6 space-y-4">
+        <div className="space-y-6">
           {steps.map((step, index) => {
             const stepNumber = index + 1;
             const isCompleted = stepNumber < currentStep;
             const isCurrent = stepNumber === currentStep;
+            const isPending = stepNumber > currentStep;
+
+            // Calculate progress for current step based on progressMessage
+            let stepProgress = 0;
+            if (isCompleted) {
+              stepProgress = 100;
+            } else if (isCurrent && progressMessage) {
+              // Try to extract numbers from progress message for step progress
+              const numberMatch = progressMessage.match(/(\d+)\/(\d+)/);
+              if (numberMatch) {
+                const [, current, total] = numberMatch;
+                stepProgress = Math.min(90, (parseInt(current) / parseInt(total)) * 100);
+              } else if (progressMessage.includes('page')) {
+                stepProgress = 50; // Arbitrary progress for pagination
+              } else {
+                stepProgress = 30; // Default progress for active step
+              }
+            }
 
             return (
-              <div
-                key={index}
-                className={`flex items-center space-x-4 text-sm ${
-                  isCompleted
-                    ? "text-green-300"
-                    : isCurrent
-                    ? "text-white font-semibold"
-                    : "text-white/60"
-                }`}
-              >
+              <div key={index} className="space-y-3">
                 <div
-                  className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold ${
+                  className={`flex items-center space-x-4 text-sm ${
                     isCompleted
-                      ? "bg-green-500/20 text-green-300 border-2 border-green-400/50"
+                      ? "text-green-300"
                       : isCurrent
-                      ? "bg-[#517ec5]/20 text-white border-2 border-[#517ec5]/60"
-                      : "bg-white/10 text-white/60 border-2 border-white/30"
+                      ? "text-white font-semibold"
+                      : "text-white/60"
                   }`}
                 >
-                  {isCompleted ? "✓" : stepNumber}
+                  <div
+                    className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold ${
+                      isCompleted
+                        ? "bg-green-500/20 text-green-300 border-2 border-green-400/50"
+                        : isCurrent
+                        ? "bg-[#517ec5]/20 text-white border-2 border-[#517ec5]/60"
+                        : "bg-white/10 text-white/60 border-2 border-white/30"
+                    }`}
+                  >
+                    {isCompleted ? "✓" : stepNumber}
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex justify-between items-center">
+                      <span>{step}</span>
+                      <div className="flex items-center space-x-3">
+                        <span className="text-xs text-white/70 font-mono">
+                          {Math.round(stepProgress)}%
+                        </span>
+                        {isCurrent && (
+                          <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-[#517ec5]"></div>
+                        )}
+                      </div>
+                    </div>
+                    {isCurrent && progressMessage && progressMessage !== step && (
+                      <div className="text-xs text-white/70 mt-1 font-normal">
+                        {progressMessage}
+                      </div>
+                    )}
+                  </div>
                 </div>
-                <span className="flex-1">{step}</span>
-                {isCurrent && (
-                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-[#517ec5]"></div>
-                )}
+
+                {/* Individual step progress bar */}
+                <div className="ml-12">
+                  <div className="w-full bg-white/10 rounded-full overflow-hidden h-2">
+                    <div
+                      className={`h-2 rounded-full transition-all duration-500 ease-out ${
+                        isCompleted
+                          ? "bg-green-400"
+                          : isCurrent
+                          ? "bg-[#517ec5]"
+                          : "bg-sky-300"
+                      }`}
+                      style={{ width: `${stepProgress}%` }}
+                    >
+                      {isCurrent && (
+                        <div className="h-full bg-white bg-opacity-30 animate-pulse" />
+                      )}
+                    </div>
+                  </div>
+                </div>
               </div>
             );
           })}

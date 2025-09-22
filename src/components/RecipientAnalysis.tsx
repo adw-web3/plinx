@@ -24,17 +24,14 @@ export function RecipientAnalysisComponent({ recipients, totalTransfers, tokenSy
     firstRecipient: recipients[0]
   });
 
-  if (loading) {
-    return (
-      <div className="w-full max-w-6xl">
-        <div className="animate-pulse space-y-6">
-          {[...Array(3)].map((_, i) => (
-            <div key={i} className="bg-white/10 backdrop-blur-sm rounded-2xl h-32 border-2 border-white/30"></div>
-          ))}
-        </div>
-      </div>
-    );
-  }
+  // Calculate summary stats (will be 0 initially but update as recipients load)
+  const totalTokensDistributed = recipients.reduce((sum, recipient) => {
+    return sum + BigInt(recipient.totalReceived);
+  }, BigInt(0));
+
+  const totalCurrentlyHeld = recipients.reduce((sum, recipient) => {
+    return sum + BigInt(recipient.currentBalance);
+  }, BigInt(0));
 
   if (error) {
     return (
@@ -46,7 +43,10 @@ export function RecipientAnalysisComponent({ recipients, totalTransfers, tokenSy
     );
   }
 
-  if (recipients.length === 0) {
+  // Show stats and recipients table even when loading (with live updates)
+  const showNoResults = !loading && recipients.length === 0;
+
+  if (showNoResults) {
     return (
       <div className="w-full max-w-6xl">
         <div className="bg-white/10 backdrop-blur-sm border-2 border-white/30 rounded-2xl p-8 text-center">
@@ -56,47 +56,51 @@ export function RecipientAnalysisComponent({ recipients, totalTransfers, tokenSy
     );
   }
 
-  const totalTokensDistributed = recipients.reduce((sum, recipient) => {
-    return sum + BigInt(recipient.totalReceived);
-  }, BigInt(0));
-
-  const totalCurrentlyHeld = recipients.reduce((sum, recipient) => {
-    return sum + BigInt(recipient.currentBalance);
-  }, BigInt(0));
-
   return (
     <div className="w-full max-w-6xl space-y-6">
-      {/* Summary Stats */}
+      {/* Summary Stats - Always visible with live updates */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <div className="bg-white/10 backdrop-blur-sm rounded-2xl border-2 border-white/30 p-6">
           <div className="text-sm font-semibold text-white/70">Total Recipients</div>
-          <div className="text-3xl font-bold text-white mt-2">{recipients.length}</div>
+          <div className={`text-3xl font-bold text-white mt-2 ${loading ? 'animate-pulse' : ''}`}>
+            {recipients.length}
+            {loading && <span className="text-lg text-white/60 ml-2">analyzing...</span>}
+          </div>
         </div>
         <div className="bg-white/10 backdrop-blur-sm rounded-2xl border-2 border-white/30 p-6">
           <div className="text-sm font-semibold text-white/70">Total Distributed</div>
-          <div className="text-3xl font-bold text-white mt-2">
+          <div className={`text-3xl font-bold text-white mt-2 ${loading ? 'animate-pulse' : ''}`}>
             {formatTokenValue(totalTokensDistributed.toString(), "18")} <span className="text-lg text-white/60">{tokenSymbol || "tokens"}</span>
           </div>
         </div>
         <div className="bg-white/10 backdrop-blur-sm rounded-2xl border-2 border-white/30 p-6">
           <div className="text-sm font-semibold text-white/70">Currently Held</div>
-          <div className="text-3xl font-bold text-white mt-2">
+          <div className={`text-3xl font-bold text-white mt-2 ${loading ? 'animate-pulse' : ''}`}>
             {formatTokenValue(totalCurrentlyHeld.toString(), "18")} <span className="text-lg text-white/60">{tokenSymbol || "tokens"}</span>
           </div>
         </div>
         <div className="bg-white/10 backdrop-blur-sm rounded-2xl border-2 border-white/30 p-6">
           <div className="text-sm font-semibold text-white/70">Total Airdrop Spots Claimed</div>
-          <div className="text-3xl font-bold text-white mt-2">{totalTransfers}</div>
+          <div className={`text-3xl font-bold text-white mt-2 ${loading ? 'animate-pulse' : ''}`}>
+            {totalTransfers}
+            {loading && <span className="text-lg text-white/60 ml-2">counting...</span>}
+          </div>
         </div>
       </div>
 
       {/* Recipients List */}
-      <div className="bg-white/10 backdrop-blur-sm rounded-2xl border-2 border-white/30 overflow-hidden">
-        <div className="px-8 py-6 border-b-2 border-white/30">
-          <h2 className="text-2xl font-bold text-white">
-            Token Recipients
-          </h2>
-        </div>
+      {(recipients.length > 0 || loading) && (
+        <div className="bg-white/10 backdrop-blur-sm rounded-2xl border-2 border-white/30 overflow-hidden">
+          <div className="px-8 py-6 border-b-2 border-white/30">
+            <h2 className="text-2xl font-bold text-white">
+              Token Recipients
+              {loading && (
+                <span className="text-lg text-white/60 ml-3 animate-pulse">
+                  Loading...
+                </span>
+              )}
+            </h2>
+          </div>
 
         <div className="overflow-x-auto">
           <table className="w-full">
@@ -194,7 +198,8 @@ export function RecipientAnalysisComponent({ recipients, totalTransfers, tokenSy
             </tbody>
           </table>
         </div>
-      </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -15,7 +15,7 @@ interface WalletInputProps {
 const getDefaultWalletAddress = (blockchain: Blockchain): string => {
   switch (blockchain.id) {
     case "bsc":
-      return "0xc7869da89109417639b4F2e8cb7215e7Aa995250";
+      return "0x9758e930B7d78870b3fC1D1AC4E2159F243b27d3";
     case "starknet":
       return "0x4e9f2949d40e94880c5c22f29bcb0c6c6c26d8c33b3996d0f11fe41982d1f4e";
     default:
