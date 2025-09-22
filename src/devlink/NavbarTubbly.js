@@ -4,7 +4,25 @@ import * as _Builtin from "./_Builtin";
 import * as _utils from "./utils";
 import _styles from "./NavbarTubbly.module.css";
 
-export function NavbarTubbly({ as: _Component = _Builtin.NavbarWrapper }) {
+export function NavbarTubbly({
+  as: _Component = _Builtin.NavbarWrapper,
+
+  navlinkPartners = {
+    href: "#",
+  },
+
+  navlinkBlockchain = {
+    href: "#",
+  },
+
+  navlinkDownload = {
+    href: "#",
+  },
+
+  navlinkLogoHome = {
+    href: "#",
+  },
+}) {
   return (
     <_Component
       className={_utils.cx(_styles, "navbar")}
@@ -25,9 +43,7 @@ export function NavbarTubbly({ as: _Component = _Builtin.NavbarWrapper }) {
       >
         <_Builtin.NavbarBrand
           className={_utils.cx(_styles, "brand")}
-          options={{
-            href: "#",
-          }}
+          options={navlinkLogoHome}
         >
           <_Builtin.Image
             loading="lazy"
@@ -44,17 +60,13 @@ export function NavbarTubbly({ as: _Component = _Builtin.NavbarWrapper }) {
         >
           <_Builtin.NavbarLink
             className={_utils.cx(_styles, "nav-link")}
-            options={{
-              href: "#",
-            }}
+            options={navlinkPartners}
           >
             {"Partnerzy"}
           </_Builtin.NavbarLink>
           <_Builtin.NavbarLink
             className={_utils.cx(_styles, "nav-link")}
-            options={{
-              href: "#",
-            }}
+            options={navlinkBlockchain}
           >
             {"Blockchain"}
           </_Builtin.NavbarLink>
@@ -62,9 +74,7 @@ export function NavbarTubbly({ as: _Component = _Builtin.NavbarWrapper }) {
             className={_utils.cx(_styles, "cta")}
             button={true}
             block=""
-            options={{
-              href: "#",
-            }}
+            options={navlinkDownload}
           >
             {"Pobierz Tubbly"}
           </_Builtin.Link>
