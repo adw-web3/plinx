@@ -182,7 +182,8 @@ export async function getRSDTokenTransfers(walletAddress: string): Promise<{
 export async function getDayvidendeRecipients(
   walletAddress: string,
   contractAddress: string = DAYVIDENDE_CONTRACT_ADDRESS,
-  onProgress?: (step: number, totalSteps: number, message: string) => void
+  onProgress?: (step: number, totalSteps: number, message: string) => void,
+  onPartialResults?: (partialRecipients: RecipientAnalysis[], totalTransfers: number, tokenSymbol: string) => void
 ): Promise<{
   recipients: RecipientAnalysis[];
   totalTransfers: number;
@@ -329,6 +330,7 @@ export async function getDayvidendeRecipients(
     // Get current balances for each recipient
     const recipients: RecipientAnalysis[] = [];
     const recipientEntries = Array.from(recipientMap.entries());
+    const tokenSymbol = outgoingTransfers.length > 0 ? outgoingTransfers[0].tokenSymbol : "TOKEN";
 
     for (let i = 0; i < recipientEntries.length; i++) {
       const [address, data] = recipientEntries[i];
@@ -373,6 +375,18 @@ export async function getDayvidendeRecipients(
         onProgress?.(4, totalSteps, `Getting balances... ${i + 1}/${recipientEntries.length} recipients`);
       }
 
+      // Send partial results to UI for live updates
+      if (onPartialResults && (i % 5 === 0 || i === recipientEntries.length - 1)) {
+        // Sort current recipients by total received (descending)
+        const sortedRecipients = [...recipients].sort((a, b) => {
+          const aTotal = BigInt(a.totalReceived);
+          const bTotal = BigInt(b.totalReceived);
+          return aTotal > bTotal ? -1 : aTotal < bTotal ? 1 : 0;
+        });
+
+        onPartialResults(sortedRecipients, outgoingTransfers.length, tokenSymbol);
+      }
+
       // Small delay to avoid rate limiting on balance calls
       if (i % 10 === 0 && i > 0) {
         await new Promise(resolve => setTimeout(resolve, 100));
@@ -387,9 +401,6 @@ export async function getDayvidendeRecipients(
       const bTotal = BigInt(b.totalReceived);
       return aTotal > bTotal ? -1 : aTotal < bTotal ? 1 : 0;
     });
-
-    // Get token symbol from the first transfer (all transfers should have the same symbol)
-    const tokenSymbol = outgoingTransfers.length > 0 ? outgoingTransfers[0].tokenSymbol : "TOKEN";
 
     return {
       recipients,

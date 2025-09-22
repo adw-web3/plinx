@@ -27,10 +27,27 @@ export default function Home() {
     setCurrentBlockchain(blockchain);
     setProgress({ currentStep: 0, totalSteps: 0, message: "" });
 
+    // Clear previous results
+    setRecipients([]);
+    setTotalTransfers(0);
+    setTokenSymbol("");
+    setIsDemo(false);
+
     try {
-      const result = await getTokenRecipients(blockchain, address, contractAddress, (step, totalSteps, message) => {
-        setProgress({ currentStep: step, totalSteps, message });
-      });
+      const result = await getTokenRecipients(
+        blockchain,
+        address,
+        contractAddress,
+        (step, totalSteps, message) => {
+          setProgress({ currentStep: step, totalSteps, message });
+        },
+        (partialRecipients, totalTransfers, tokenSymbol) => {
+          // Live update the UI with partial results
+          setRecipients(partialRecipients);
+          setTotalTransfers(totalTransfers);
+          setTokenSymbol(tokenSymbol);
+        }
+      );
 
       setRecipients(result.recipients);
       setTotalTransfers(result.totalTransfers);
@@ -119,16 +136,16 @@ export default function Home() {
           )}
 
           <LoadingProgress
-            currentStep={progress.currentStep}
-            totalSteps={progress.totalSteps}
+            currentStep={progress.currentStep - 1}
+            totalSteps={progress.totalSteps - 1}
             steps={[
-              "Validating API credentials...",
               `Fetching token transfers from ${currentBlockchain.name}...`,
               "Processing transaction data...",
               "Analyzing recipient patterns...",
               "Finalizing recipient analysis..."
             ]}
             isLoading={loading}
+            progressMessage={progress.message}
           />
 
           <RecipientAnalysisComponent

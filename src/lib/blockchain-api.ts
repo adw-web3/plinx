@@ -16,11 +16,12 @@ export async function getTokenRecipients(
   blockchain: Blockchain,
   walletAddress: string,
   contractAddress: string,
-  onProgress?: (step: number, totalSteps: number, message: string) => void
+  onProgress?: (step: number, totalSteps: number, message: string) => void,
+  onPartialResults?: (partialRecipients: UnifiedRecipientAnalysis[], totalTransfers: number, tokenSymbol: string) => void
 ): Promise<BlockchainApiResult> {
   switch (blockchain.id) {
     case "bsc":
-      return await getDayvidendeRecipients(walletAddress, contractAddress, onProgress);
+      return await getDayvidendeRecipients(walletAddress, contractAddress, onProgress, onPartialResults);
 
     case "starknet":
       return await getStarknetTokenTransfers(walletAddress, contractAddress, onProgress);
@@ -72,7 +73,7 @@ export function getBlockchainTokenUrl(blockchain: Blockchain, contractAddress: s
 export function getDefaultContractAddress(blockchain: Blockchain): string {
   switch (blockchain.id) {
     case "bsc":
-      return "0x55d398326f99059fF775485246999027B3197955"; // BSC-USD (USDT)
+      return "0xfF1E54d02B5d0576E7BEfD03602E36d5720D1997"; // Default token contract
     case "starknet":
       return "0x0124aeb495b947201f5faC96fD1138E326AD86195B98df6DEc9009158A533B49"; // LORDS token
     default:

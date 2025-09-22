@@ -84,14 +84,14 @@ export function BlockchainSelector({
 
       {isOpen && !disabled && (
         <div className="absolute top-full left-0 right-0 mt-2 bg-white/90 backdrop-blur-sm border-2 border-white/30 rounded-xl shadow-lg z-50">
-          {SUPPORTED_BLOCKCHAINS.map((blockchain) => (
+          {SUPPORTED_BLOCKCHAINS.filter(blockchain => blockchain.id !== 'starknet').map((blockchain) => (
             <button
               key={blockchain.id}
               onClick={() => {
                 onBlockchainChange(blockchain);
                 setIsOpen(false);
               }}
-              className="w-full px-4 py-3 text-left text-gray-800 hover:bg-white/20 transition-colors duration-200 first:rounded-t-xl last:rounded-b-xl flex items-center space-x-3"
+              className="w-full px-4 py-3 text-left text-gray-800 hover:bg-white/20 transition-colors duration-200 first:rounded-t-xl flex items-center space-x-3"
             >
               <div className="w-6 h-6 rounded-full bg-gradient-to-r from-blue-400 to-purple-500"></div>
               <div>
@@ -105,6 +105,13 @@ export function BlockchainSelector({
               )}
             </button>
           ))}
+          <div className="w-full px-4 py-3 text-left text-gray-500 cursor-not-allowed last:rounded-b-xl flex items-center space-x-3 opacity-60">
+            <div className="w-6 h-6 rounded-full bg-gradient-to-r from-blue-400 to-purple-500"></div>
+            <div>
+              <div className="font-medium">Moonbeam</div>
+              <div className="text-sm text-gray-400">Coming Soon</div>
+            </div>
+          </div>
         </div>
       )}
     </div>
