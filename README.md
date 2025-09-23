@@ -1,7 +1,5 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`webflow cloud init`](https://developers.webflow.com/webflow-cloud/intro).
 
-## Getting Started
-
 First, run the server:
 
 ```bash
