@@ -92,7 +92,7 @@ export function BlockchainSelector({
 
       {isOpen && !disabled && (
         <div className="absolute top-full left-0 right-0 mt-2 bg-white/90 backdrop-blur-sm border-2 border-white/30 rounded-xl shadow-lg z-50">
-          {SUPPORTED_BLOCKCHAINS.filter(blockchain => blockchain.id !== 'starknet').map((blockchain) => (
+          {SUPPORTED_BLOCKCHAINS.map((blockchain) => (
             <button
               key={blockchain.id}
               onClick={() => {
