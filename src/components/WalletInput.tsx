@@ -16,6 +16,8 @@ const getDefaultWalletAddress = (blockchain: Blockchain): string => {
   switch (blockchain.id) {
     case "bsc":
       return "0x9758e930B7d78870b3fC1D1AC4E2159F243b27d3";
+    case "moonbeam":
+      return "0xd124ffd5aa0431891838344d2fbA5765F5d7D8ab";
     case "starknet":
       return "0x4e9f2949d40e94880c5c22f29bcb0c6c6c26d8c33b3996d0f11fe41982d1f4e";
     default:

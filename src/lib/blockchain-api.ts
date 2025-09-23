@@ -1,5 +1,6 @@
 import { RecipientAnalysis, getDayvidendeRecipients } from "./bsc-api";
 import { StarknetRecipientAnalysis, getStarknetTokenTransfers } from "./starknet-api";
+import { getMoonbeamTokenTransfers } from "./moonbeam-api";
 import { Blockchain } from "@/components/BlockchainSelector";
 
 export type UnifiedRecipientAnalysis = RecipientAnalysis | StarknetRecipientAnalysis;
@@ -23,6 +24,9 @@ export async function getTokenRecipients(
     case "bsc":
       return await getDayvidendeRecipients(walletAddress, contractAddress, onProgress, onPartialResults);
 
+    case "moonbeam":
+      return await getMoonbeamTokenTransfers(walletAddress, contractAddress, onProgress, onPartialResults);
+
     case "starknet":
       return await getStarknetTokenTransfers(walletAddress, contractAddress, onProgress);
 
@@ -40,6 +44,7 @@ export async function getTokenRecipients(
 export function getBlockchainExplorerUrl(blockchain: Blockchain, address: string): string {
   switch (blockchain.id) {
     case "bsc":
+    case "moonbeam":
       return `${blockchain.explorerUrl}/address/${address}`;
     case "starknet":
       return `${blockchain.explorerUrl}/contract/${address}`;
@@ -51,6 +56,7 @@ export function getBlockchainExplorerUrl(blockchain: Blockchain, address: string
 export function getBlockchainTransactionUrl(blockchain: Blockchain, txHash: string): string {
   switch (blockchain.id) {
     case "bsc":
+    case "moonbeam":
       return `${blockchain.explorerUrl}/tx/${txHash}`;
     case "starknet":
       return `${blockchain.explorerUrl}/tx/${txHash}`;
@@ -62,6 +68,7 @@ export function getBlockchainTransactionUrl(blockchain: Blockchain, txHash: stri
 export function getBlockchainTokenUrl(blockchain: Blockchain, contractAddress: string): string {
   switch (blockchain.id) {
     case "bsc":
+    case "moonbeam":
       return `${blockchain.explorerUrl}/token/${contractAddress}`;
     case "starknet":
       return `${blockchain.explorerUrl}/contract/${contractAddress}`;
@@ -74,6 +81,8 @@ export function getDefaultContractAddress(blockchain: Blockchain): string {
   switch (blockchain.id) {
     case "bsc":
       return "0xfF1E54d02B5d0576E7BEfD03602E36d5720D1997"; // Default token contract
+    case "moonbeam":
+      return "0x0000000000000000000000000000000000000802"; // Native GLMR precompile
     case "starknet":
       return "0x0124aeb495b947201f5faC96fD1138E326AD86195B98df6DEc9009158A533B49"; // LORDS token
     default:
