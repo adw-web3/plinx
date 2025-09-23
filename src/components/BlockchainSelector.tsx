@@ -22,6 +22,14 @@ export const SUPPORTED_BLOCKCHAINS: Blockchain[] = [
     nativeCurrency: "BNB"
   },
   {
+    id: "moonbeam",
+    name: "Moonbeam",
+    chainId: 1284,
+    apiUrl: "https://api.etherscan.io/v2/api",
+    explorerUrl: "https://moonscan.io",
+    nativeCurrency: "GLMR"
+  },
+  {
     id: "starknet",
     name: "Starknet",
     chainId: 23448594291968334,
@@ -91,7 +99,7 @@ export function BlockchainSelector({
                 onBlockchainChange(blockchain);
                 setIsOpen(false);
               }}
-              className="w-full px-4 py-3 text-left text-gray-800 hover:bg-white/20 transition-colors duration-200 first:rounded-t-xl flex items-center space-x-3"
+              className="w-full px-4 py-3 text-left text-gray-800 hover:bg-white/20 transition-colors duration-200 first:rounded-t-xl last:rounded-b-xl flex items-center space-x-3"
             >
               <div className="w-6 h-6 rounded-full bg-gradient-to-r from-blue-400 to-purple-500"></div>
               <div>
@@ -105,13 +113,6 @@ export function BlockchainSelector({
               )}
             </button>
           ))}
-          <div className="w-full px-4 py-3 text-left text-gray-500 cursor-not-allowed last:rounded-b-xl flex items-center space-x-3 opacity-60">
-            <div className="w-6 h-6 rounded-full bg-gradient-to-r from-blue-400 to-purple-500"></div>
-            <div>
-              <div className="font-medium">Moonbeam</div>
-              <div className="text-sm text-gray-400">Coming Soon</div>
-            </div>
-          </div>
         </div>
       )}
     </div>
