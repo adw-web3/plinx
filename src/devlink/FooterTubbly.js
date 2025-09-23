@@ -4,7 +4,32 @@ import * as _Builtin from "./_Builtin";
 import * as _utils from "./utils";
 import _styles from "./FooterTubbly.module.css";
 
-export function FooterTubbly({ as: _Component = _Builtin.Section }) {
+export function FooterTubbly({
+  as: _Component = _Builtin.Section,
+  footerAktualnosciName = "Aktualności",
+
+  footerAktualnosciLink = {
+    href: "#",
+  },
+
+  footerRegulaminLInk = {
+    href: "#",
+  },
+
+  footerRegulaminName = "Regulamin",
+
+  footerPolitykaPrywatnosciLink = {
+    href: "#",
+  },
+
+  footerPolitykaPrywatnosciName = "Polityka Prywatności",
+
+  footerSkrzynkiRegulaminLink = {
+    href: "#",
+  },
+
+  footerSkrzynkiRegulaminName = "Skrzynki Regulamin",
+}) {
   return (
     <_Component
       className={_utils.cx(_styles, "section", "footer")}
@@ -43,33 +68,27 @@ export function FooterTubbly({ as: _Component = _Builtin.Section }) {
               className={_utils.cx(_styles, "footer-link")}
               button={false}
               block=""
-              options={{
-                href: "#",
-              }}
+              options={footerRegulaminLInk}
             >
-              {"Regulamin"}
+              {footerRegulaminName}
             </_Builtin.Link>
             <_Builtin.Block className={_utils.cx(_styles, "dot")} tag="div" />
             <_Builtin.Link
               className={_utils.cx(_styles, "footer-link")}
               button={false}
               block=""
-              options={{
-                href: "#",
-              }}
+              options={footerPolitykaPrywatnosciLink}
             >
-              {"Polityka Prywatności"}
+              {footerPolitykaPrywatnosciName}
             </_Builtin.Link>
             <_Builtin.Block className={_utils.cx(_styles, "dot")} tag="div" />
             <_Builtin.Link
               className={_utils.cx(_styles, "footer-link")}
               button={false}
               block=""
-              options={{
-                href: "#",
-              }}
+              options={footerSkrzynkiRegulaminLink}
             >
-              {"Skrzynki Regulamin"}
+              {footerSkrzynkiRegulaminName}
             </_Builtin.Link>
           </_Builtin.Block>
           <_Builtin.Block className={_utils.cx(_styles, "h-flex")} tag="div">
@@ -126,11 +145,9 @@ export function FooterTubbly({ as: _Component = _Builtin.Section }) {
               className={_utils.cx(_styles, "footer-link")}
               button={false}
               block=""
-              options={{
-                href: "#",
-              }}
+              options={footerAktualnosciLink}
             >
-              {"Aktualności"}
+              {footerAktualnosciName}
             </_Builtin.Link>
             <_Builtin.Block className={_utils.cx(_styles, "dot")} tag="div" />
             <_Builtin.Link

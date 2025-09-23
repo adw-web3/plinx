@@ -46,9 +46,21 @@ export default function RootLayout({
             navlinkBlockchain={{ href: "/en/blockchain" }}
             navlinkDownload={{ href: "/en/download" }}
             navlinkLogoHome={{ href: "/en" }}
+            navlinkPartnersName="Partners"
+            navlinkBlockchainName="Blockchain"
+            navlinkDownloadName="Download Tubbly"
           />
           {children}
-          <FooterTubbly />
+          <FooterTubbly
+            footerAktualnosciName="Updates"
+            footerAktualnosciLink={{ href: "/en/articles" }}
+            footerRegulaminLInk={{ href: "/en/warunki-uzytkowania-tubbly" }}
+            footerRegulaminName="Regulation"
+            footerPolitykaPrywatnosciLink={{ href: "/en/polityka-prywatnosci" }}
+            footerPolitykaPrywatnosciName="Privacy Policy"
+            footerSkrzynkiRegulaminLink={{ href: "/en/regulamin-lootbox-tubbly" }}
+            footerSkrzynkiRegulaminName="Terms & Conditions Lootboxes"
+          />
         </DevLinkProvider>
       </body>
     </html>
