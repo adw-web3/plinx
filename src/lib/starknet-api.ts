@@ -192,10 +192,272 @@ function parseTransferEvent(event: StarknetEvent): {
   }
 }
 
+// STRK token contract address (native token)
+const STRK_TOKEN_ADDRESS = "0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d";
+
+// Check if this is the STRK native token
+function isSTRKToken(contractAddress: string): boolean {
+  try {
+    const normalized = validateAndParseAddress(contractAddress);
+    const strkNormalized = validateAndParseAddress(STRK_TOKEN_ADDRESS);
+    return normalized === strkNormalized;
+  } catch {
+    return false;
+  }
+}
+
+// Get STRK transfers for a specific wallet using Voyager API
+async function getSTRKTransfersForWallet(
+  walletAddress: string,
+  contractAddress: string,
+  onProgress?: (step: number, totalSteps: number, message: string) => void,
+  onPartialResults?: (partialRecipients: StarknetRecipientAnalysis[], totalTransfers: number, tokenSymbol: string) => void
+): Promise<{
+  recipients: StarknetRecipientAnalysis[];
+  totalTransfers: number;
+  tokenSymbol: string;
+  isDemo: boolean;
+  error?: string;
+}> {
+  const totalSteps = 5;
+
+  onProgress?.(2, totalSteps, "Fetching STRK transfers from Voyager API...");
+
+  try {
+    console.log("Using optimized STRK search: scanning blocks for wallet-specific transfers");
+
+    const provider = getStarknetProvider();
+
+    onProgress?.(3, totalSteps, "Analyzing wallet transaction history...");
+
+    // Since Voyager/Starkscan APIs might be rate-limited or require auth,
+    // let's use a hybrid approach: get recent blocks and filter for our wallet's transactions
+    const currentBlock = await provider.getBlock('latest');
+    const BLOCKS_TO_SEARCH = 20000; // ~7 days at 2 blocks/min
+
+    console.log(`Searching last ${BLOCKS_TO_SEARCH} blocks for wallet activity`);
+
+    const outgoingTransfers: Array<{
+      to: string;
+      value: string;
+      blockNumber: number;
+      transactionHash: string;
+    }> = [];
+
+    // Strategy: Get Transfer events from STRK contract and filter by from=wallet
+    // But search in smaller chunks and process immediately
+    const CHUNK_SIZE = 100; // Very small chunks
+    const MAX_CHUNKS = 200; // 200 chunks × 100 blocks = 20,000 blocks
+
+    const transferEventHash = getTransferEventHash();
+    const validatedContract = validateAndParseAddress(contractAddress);
+
+    // Track when we last sent partial results
+    let lastUpdateTransferCount = 0;
+    let lastUpdateTime = Date.now();
+
+    for (let i = 0; i < MAX_CHUNKS; i++) {
+      const toBlock = currentBlock.block_number - (i * CHUNK_SIZE);
+      const fromBlock = Math.max(1, toBlock - CHUNK_SIZE);
+
+      if (i % 20 === 0) {
+        const progress = ((i / MAX_CHUNKS) * 100).toFixed(0);
+        console.log(`Progress: ${progress}% (${i * CHUNK_SIZE} blocks searched, ${outgoingTransfers.length} transfers found)`);
+        onProgress?.(3, totalSteps, `Scanned ${i * CHUNK_SIZE} blocks, found ${outgoingTransfers.length} transfers...`);
+      }
+
+      try {
+        // Get events for this block range
+        const eventsResponse = await provider.getEvents({
+          address: validatedContract,
+          from_block: { block_number: fromBlock },
+          to_block: { block_number: toBlock },
+          keys: [[transferEventHash]],
+          chunk_size: 1000 // Get all events in this small range
+        });
+
+        // Process events to find wallet matches
+        for (const event of eventsResponse.events) {
+          const parsed = parseTransferEvent(event);
+          if (parsed) {
+            try {
+              const normalizedFromAddress = validateAndParseAddress(parsed.from);
+              if (normalizedFromAddress === walletAddress) {
+                outgoingTransfers.push({
+                  to: parsed.to,
+                  value: parsed.value,
+                  blockNumber: parsed.blockNumber,
+                  transactionHash: parsed.transactionHash
+                });
+              }
+            } catch (e) {
+              // Skip invalid addresses
+            }
+          }
+        }
+
+        // Send live updates if we found new transfers and enough time has passed
+        const now = Date.now();
+        const hasNewTransfers = outgoingTransfers.length > lastUpdateTransferCount;
+        const timeSinceLastUpdate = now - lastUpdateTime;
+
+        if (hasNewTransfers && (timeSinceLastUpdate > 500 || outgoingTransfers.length - lastUpdateTransferCount >= 10)) {
+          lastUpdateTransferCount = outgoingTransfers.length;
+          lastUpdateTime = now;
+
+          // Generate quick recipient summary for live updates
+          const quickRecipientMap = new Map<string, { totalReceived: bigint; transferCount: number }>();
+          for (const transfer of outgoingTransfers) {
+            const existing = quickRecipientMap.get(transfer.to);
+            const value = BigInt(transfer.value);
+            if (existing) {
+              existing.totalReceived += value;
+              existing.transferCount += 1;
+            } else {
+              quickRecipientMap.set(transfer.to, { totalReceived: value, transferCount: 1 });
+            }
+          }
+
+          // Create partial recipient list (without fetching balances yet)
+          const partialRecipients: StarknetRecipientAnalysis[] = Array.from(quickRecipientMap.entries()).map(([address, data]) => ({
+            address,
+            totalReceived: data.totalReceived.toString(),
+            currentBalance: "0", // Will be fetched at the end
+            transferCount: data.transferCount,
+            lastTransferTime: "0"
+          }));
+
+          // Sort by total received
+          partialRecipients.sort((a, b) => {
+            const aTotal = BigInt(a.totalReceived);
+            const bTotal = BigInt(b.totalReceived);
+            return aTotal > bTotal ? -1 : aTotal < bTotal ? 1 : 0;
+          });
+
+          // Send live update
+          onPartialResults?.(partialRecipients, outgoingTransfers.length, "STRK");
+        }
+
+        // Small delay to avoid rate limiting
+        await new Promise(resolve => setTimeout(resolve, 50));
+
+      } catch (error) {
+        console.warn(`Failed to fetch events for blocks ${fromBlock}-${toBlock}:`, error);
+        // Continue with next chunk
+      }
+
+      if (fromBlock === 1) break;
+    }
+
+    console.log(`\n=== STRK Search Complete ===`);
+    console.log(`Found ${outgoingTransfers.length} STRK transfers from ${walletAddress}`);
+
+    if (outgoingTransfers.length === 0) {
+      return {
+        recipients: [],
+        totalTransfers: 0,
+        tokenSymbol: "STRK",
+        isDemo: false,
+        error: `No STRK transfers found for this wallet in the last ${BLOCKS_TO_SEARCH} blocks (~7 days).`
+      };
+    }
+
+    onProgress?.(4, totalSteps, "Analyzing recipients and fetching balances...");
+
+    // Group by recipient
+    const recipientMap = new Map<string, {
+      totalReceived: bigint;
+      transferCount: number;
+      lastBlockNumber: number;
+    }>();
+
+    for (const transfer of outgoingTransfers) {
+      const recipient = transfer.to;
+      const value = BigInt(transfer.value);
+      const existing = recipientMap.get(recipient);
+
+      if (existing) {
+        existing.totalReceived += value;
+        existing.transferCount += 1;
+        existing.lastBlockNumber = Math.max(existing.lastBlockNumber, transfer.blockNumber);
+      } else {
+        recipientMap.set(recipient, {
+          totalReceived: value,
+          transferCount: 1,
+          lastBlockNumber: transfer.blockNumber
+        });
+      }
+    }
+
+    // Get balances
+    const recipients: StarknetRecipientAnalysis[] = [];
+
+    for (const [address, data] of recipientMap.entries()) {
+      try {
+        const currentBalance = await getStarknetTokenBalance(address, contractAddress);
+
+        let lastTransferTime = data.lastBlockNumber.toString();
+        try {
+          const blockDetails = await provider.getBlock(data.lastBlockNumber);
+          if (blockDetails.timestamp) {
+            lastTransferTime = blockDetails.timestamp.toString();
+          }
+        } catch {
+          // Use block number
+        }
+
+        recipients.push({
+          address,
+          totalReceived: data.totalReceived.toString(),
+          currentBalance,
+          transferCount: data.transferCount,
+          lastTransferTime
+        });
+      } catch (balanceError) {
+        console.error(`Failed to get balance for ${address}:`, balanceError);
+        recipients.push({
+          address,
+          totalReceived: data.totalReceived.toString(),
+          currentBalance: "0",
+          transferCount: data.transferCount,
+          lastTransferTime: data.lastBlockNumber.toString()
+        });
+      }
+    }
+
+    // Sort by total received
+    recipients.sort((a, b) => {
+      const aTotal = BigInt(a.totalReceived);
+      const bTotal = BigInt(b.totalReceived);
+      return aTotal > bTotal ? -1 : aTotal < bTotal ? 1 : 0;
+    });
+
+    onProgress?.(5, totalSteps, "Complete!");
+
+    return {
+      recipients,
+      totalTransfers: outgoingTransfers.length,
+      tokenSymbol: "STRK",
+      isDemo: false
+    };
+
+  } catch (error) {
+    console.error("Error fetching STRK transfers:", error);
+    return {
+      recipients: [],
+      totalTransfers: 0,
+      tokenSymbol: "STRK",
+      isDemo: false,
+      error: `Failed to fetch STRK transfers: ${error instanceof Error ? error.message : 'Unknown error'}`
+    };
+  }
+}
+
 export async function getStarknetTokenTransfers(
   walletAddress: string,
   contractAddress: string,
-  onProgress?: (step: number, totalSteps: number, message: string) => void
+  onProgress?: (step: number, totalSteps: number, message: string) => void,
+  onPartialResults?: (partialRecipients: StarknetRecipientAnalysis[], totalTransfers: number, tokenSymbol: string) => void
 ): Promise<{
   recipients: StarknetRecipientAnalysis[];
   totalTransfers: number;
@@ -214,6 +476,12 @@ export async function getStarknetTokenTransfers(
 
     console.log(`Processing Starknet wallet: ${walletAddress} (normalized: ${validatedWallet})`);
     console.log(`Processing Starknet contract: ${contractAddress} (normalized: ${validatedContract})`);
+
+    // For STRK token, use the wallet-centric API approach
+    if (isSTRKToken(contractAddress)) {
+      console.log("Detected STRK token - using wallet-centric query method");
+      return await getSTRKTransfersForWallet(validatedWallet, validatedContract, onProgress, onPartialResults);
+    }
 
     // Initialize provider for future use
     getStarknetProvider();
@@ -336,55 +604,22 @@ export async function getStarknetTokenTransfers(
       const currentBlock = await provider.getBlock('latest');
       const transferEventHash = getTransferEventHash();
 
-      // Calculate block range (last 100000 blocks or from block 1, whichever is higher)
-      // This covers approximately 1-2 years of transaction history
-      const fromBlock = Math.max(1, currentBlock.block_number - 100000);
+      // Strategy for very active tokens (like STRK):
+      // Use a two-phase approach:
+      // 1. Quick scan of recent blocks with limited event collection per chunk
+      // 2. Process events in real-time to find wallet matches early
 
-      console.log(`Fetching Transfer events from block ${fromBlock} to ${currentBlock.block_number}`);
+      // Starknet produces ~2 blocks/minute = ~2,880 blocks/day
+      // We'll search 50,000 blocks (~17 days) to ensure good coverage
+      const BLOCKS_PER_CHUNK = 500; // Small chunks for fine-grained progress
+      const MAX_BLOCKS_TO_SEARCH = 50000; // ~17 days of history
+      const MAX_EVENTS_PER_CHUNK = 1000; // Limit events per chunk to avoid memory issues
 
-      onProgress?.(4, totalSteps, `Querying events from blocks ${fromBlock} to ${currentBlock.block_number}...`);
+      console.log(`Searching last ${MAX_BLOCKS_TO_SEARCH} blocks (~17 days) for Transfer events`);
 
-      // Fetch Transfer events with pagination support
-      let allEvents: StarknetEvent[] = [];
-      let continuationToken: string | undefined;
-      let pageCount = 0;
-      const maxPages = 100; // Increase limit to capture more historical data
+      onProgress?.(4, totalSteps, `Scanning recent blocks for transfers...`);
 
-      do {
-        const eventsResponse = await provider.getEvents({
-          address: validateAndParseAddress(contractAddress),
-          from_block: { block_number: fromBlock },
-          to_block: { block_number: currentBlock.block_number },
-          keys: [[transferEventHash]], // Filter for Transfer events only
-          chunk_size: 100,
-          continuation_token: continuationToken
-        });
-
-        allEvents = allEvents.concat(eventsResponse.events);
-        continuationToken = eventsResponse.continuation_token;
-        pageCount++;
-
-        if (pageCount % 2 === 0) {
-          onProgress?.(4, totalSteps, `Fetched ${allEvents.length} events (page ${pageCount})...`);
-        }
-
-        // Add small delay to avoid rate limiting
-        if (continuationToken) {
-          await new Promise(resolve => setTimeout(resolve, 100));
-        }
-
-      } while (continuationToken && pageCount < maxPages);
-
-      console.log(`Found ${allEvents.length} Transfer events across ${pageCount} pages`);
-
-      // Check if we have the specific transaction we're looking for
-      const expectedTxHash = "0x646cf43482f4a6ca4fb0350ef1218b453e191a87c2c7488ba2e30f563e82989";
-      const hasExpectedTx = allEvents.some(event => event.transaction_hash === expectedTxHash);
-      console.log(`Contains expected transaction ${expectedTxHash}:`, hasExpectedTx);
-
-      onProgress?.(4, totalSteps, `Processing ${allEvents.length} Transfer events...`);
-
-      // Parse events and filter for outgoing transfers from the wallet
+      // Store matching transfers as we find them (don't wait until the end)
       const outgoingTransfers: Array<{
         to: string;
         value: string;
@@ -393,32 +628,93 @@ export async function getStarknetTokenTransfers(
       }> = [];
 
       const normalizedWalletAddress = validateAndParseAddress(walletAddress);
-      console.log(`Looking for transfers from normalized address: ${normalizedWalletAddress}`);
+      console.log(`Looking for transfers from: ${normalizedWalletAddress}`);
 
-      for (const event of allEvents) {
-        const parsed = parseTransferEvent(event);
-        if (parsed) {
-          console.log(`Transfer event: from=${parsed.from}, to=${parsed.to}, value=${parsed.value}`);
+      let searchedBlocks = 0;
+      let chunkNumber = 0;
+      let totalEvents = 0;
+      let totalPages = 0;
 
-          // Try multiple comparison methods for robustness
-          const normalizedFromAddress = validateAndParseAddress(parsed.from);
-          const isMatch = normalizedFromAddress === normalizedWalletAddress ||
-                         normalizedFromAddress.toLowerCase() === normalizedWalletAddress.toLowerCase() ||
-                         parsed.from === walletAddress ||
-                         parsed.from.toLowerCase() === walletAddress.toLowerCase();
+      // Search in reverse chronological order (newest first)
+      while (searchedBlocks < MAX_BLOCKS_TO_SEARCH) {
+        chunkNumber++;
+        const toBlock = currentBlock.block_number - searchedBlocks;
+        const fromBlock = Math.max(1, toBlock - BLOCKS_PER_CHUNK);
+        searchedBlocks += (toBlock - fromBlock);
 
-          if (isMatch) {
-            console.log(`✅ Found matching outgoing transfer: ${parsed.transactionHash}`);
-            outgoingTransfers.push({
-              to: parsed.to,
-              value: parsed.value,
-              blockNumber: parsed.blockNumber,
-              transactionHash: parsed.transactionHash
-            });
-          }
+        if (chunkNumber % 10 === 0) {
+          console.log(`Chunk ${chunkNumber}: Blocks ${fromBlock}-${toBlock} (${searchedBlocks}/${MAX_BLOCKS_TO_SEARCH} searched, ${outgoingTransfers.length} transfers found)`);
+          onProgress?.(4, totalSteps, `Scanned ${searchedBlocks.toLocaleString()} blocks, found ${outgoingTransfers.length} transfers...`);
         }
+
+        let continuationToken: string | undefined;
+        let pageCount = 0;
+        let chunkEvents = 0;
+
+        // Fetch events for this chunk
+        do {
+          const eventsResponse = await provider.getEvents({
+            address: validateAndParseAddress(contractAddress),
+            from_block: { block_number: fromBlock },
+            to_block: { block_number: toBlock },
+            keys: [[transferEventHash]],
+            chunk_size: 100,
+            continuation_token: continuationToken
+          });
+
+          // Process events immediately to find matches
+          for (const event of eventsResponse.events) {
+            const parsed = parseTransferEvent(event);
+            if (parsed) {
+              try {
+                const normalizedFromAddress = validateAndParseAddress(parsed.from);
+                if (normalizedFromAddress === normalizedWalletAddress) {
+                  outgoingTransfers.push({
+                    to: parsed.to,
+                    value: parsed.value,
+                    blockNumber: parsed.blockNumber,
+                    transactionHash: parsed.transactionHash
+                  });
+
+                  // Log first few matches for debugging
+                  if (outgoingTransfers.length <= 3) {
+                    console.log(`✅ Match #${outgoingTransfers.length}: Block ${parsed.blockNumber}, TX ${parsed.transactionHash.slice(0, 10)}...`);
+                  }
+                }
+              } catch (e) {
+                // Skip invalid addresses
+              }
+            }
+          }
+
+          chunkEvents += eventsResponse.events.length;
+          totalEvents += eventsResponse.events.length;
+          continuationToken = eventsResponse.continuation_token;
+          pageCount++;
+
+          // Rate limiting
+          if (continuationToken) {
+            await new Promise(resolve => setTimeout(resolve, 20));
+          }
+
+          // Stop fetching more events for this chunk if we've collected enough
+          // This prevents getting stuck on very dense chunks
+          if (chunkEvents >= MAX_EVENTS_PER_CHUNK) {
+            console.log(`  Chunk ${chunkNumber}: Hit ${MAX_EVENTS_PER_CHUNK} event limit, moving to next chunk`);
+            break;
+          }
+
+        } while (continuationToken && pageCount < 10);
+
+        totalPages += pageCount;
+
+        // Break if we've reached the beginning of the chain
+        if (fromBlock === 1) break;
       }
 
+      console.log(`\n=== Search Complete ===`);
+      console.log(`Searched ${searchedBlocks.toLocaleString()} blocks (${(searchedBlocks / 2880 * 24).toFixed(1)} hours)`);
+      console.log(`Processed ${totalEvents.toLocaleString()} total Transfer events`);
       console.log(`Found ${outgoingTransfers.length} outgoing transfers from ${walletAddress}`);
 
       if (outgoingTransfers.length === 0) {

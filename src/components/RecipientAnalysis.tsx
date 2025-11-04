@@ -172,25 +172,39 @@ export function RecipientAnalysisComponent({ recipients, totalTransfers, tokenSy
                       <div className="text-sm text-white">{recipient.transferCount}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-white/70">
-                        {formatTimestamp(recipient.lastTransferTime)}
-                      </div>
+                      {recipient.lastTransferTime === "0" ? (
+                        <div className="flex items-center space-x-2">
+                          <div className="h-2 w-2 bg-blue-400 rounded-full animate-pulse"></div>
+                          <span className="text-xs text-white/50 italic">Loading...</span>
+                        </div>
+                      ) : (
+                        <div className="text-sm text-white/70">
+                          {formatTimestamp(recipient.lastTransferTime)}
+                        </div>
+                      )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center space-x-3">
-                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${
-                          currentBalance > 0
-                            ? "bg-green-500/20 text-green-300 border-2 border-green-400/50"
-                            : "bg-gray-500/20 text-gray-300 border-2 border-gray-400/50"
-                        }`}>
-                          {currentBalance > 0 ? "Holding" : "Sold/Transferred"}
-                        </span>
-                        {currentBalance > 0 && (
-                          <span className="text-xs text-white/60">
-                            {retentionPercentage.toFixed(1)}% retained
+                      {recipient.currentBalance === "0" && recipient.lastTransferTime === "0" ? (
+                        <div className="flex items-center space-x-2">
+                          <div className="h-2 w-2 bg-blue-400 rounded-full animate-pulse"></div>
+                          <span className="text-xs text-white/50 italic">Checking...</span>
+                        </div>
+                      ) : (
+                        <div className="flex items-center space-x-3">
+                          <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${
+                            currentBalance > 0
+                              ? "bg-green-500/20 text-green-300 border-2 border-green-400/50"
+                              : "bg-gray-500/20 text-gray-300 border-2 border-gray-400/50"
+                          }`}>
+                            {currentBalance > 0 ? "Holding" : "Sold/Transferred"}
                           </span>
-                        )}
-                      </div>
+                          {currentBalance > 0 && (
+                            <span className="text-xs text-white/60">
+                              {retentionPercentage.toFixed(1)}% retained
+                            </span>
+                          )}
+                        </div>
+                      )}
                     </td>
                   </tr>
                 );

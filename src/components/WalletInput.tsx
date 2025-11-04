@@ -6,6 +6,9 @@ import { BlockchainSelector, SUPPORTED_BLOCKCHAINS, type Blockchain } from "./Bl
 import { getDefaultContractAddress } from "@/lib/blockchain-api";
 import { validateStarknetAddress } from "@/lib/starknet-api";
 
+// STRK native token contract address
+const STRK_CONTRACT_ADDRESS = "0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d";
+
 interface WalletInputProps {
   onAddressSubmit: (address: string, contractAddress: string, blockchain: Blockchain) => void;
   loading?: boolean;
@@ -14,12 +17,12 @@ interface WalletInputProps {
 // Default wallet addresses for easy testing
 const getDefaultWalletAddress = (blockchain: Blockchain): string => {
   switch (blockchain.id) {
+    case "starknet":
+      return "0x5a7a86d6113c8860f90f96ea1c8e70a747333feabb40b0584c3936fa6f86717"; // Starknet wallet with STRK activity
     case "bsc":
       return "0x9758e930B7d78870b3fC1D1AC4E2159F243b27d3";
     case "moonbeam":
       return "0xd124ffd5aa0431891838344d2fbA5765F5d7D8ab";
-    case "starknet":
-      return "0x4e9f2949d40e94880c5c22f29bcb0c6c6c26d8c33b3996d0f11fe41982d1f4e";
     default:
       return "";
   }
@@ -30,6 +33,10 @@ export function WalletInput({ onAddressSubmit, loading = false }: WalletInputPro
   const [address, setAddress] = useState(getDefaultWalletAddress(SUPPORTED_BLOCKCHAINS[0]));
   const [contractAddress, setContractAddress] = useState(getDefaultContractAddress(SUPPORTED_BLOCKCHAINS[0]));
   const [error, setError] = useState("");
+
+  // Check if current contract is STRK native token
+  const isSTRKContract = selectedBlockchain.id === "starknet" &&
+    contractAddress.toLowerCase() === STRK_CONTRACT_ADDRESS.toLowerCase();
 
   const validateAddress = (addr: string): boolean => {
     if (selectedBlockchain.id === "starknet") {
@@ -116,9 +123,14 @@ export function WalletInput({ onAddressSubmit, loading = false }: WalletInputPro
           <div>
             <label
               htmlFor="token-contract"
-              className="block text-sm font-semibold text-white mb-3"
+              className="block text-sm font-semibold text-white mb-3 flex items-center gap-2"
             >
-              Token Contract Address
+              <span>Token Contract Address</span>
+              {isSTRKContract && (
+                <span className="text-xs bg-blue-500/80 text-white px-2 py-1 rounded-full font-normal">
+                  Native Token - Optimized Search
+                </span>
+              )}
             </label>
             <input
               id="token-contract"

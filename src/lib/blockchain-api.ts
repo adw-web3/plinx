@@ -28,7 +28,7 @@ export async function getTokenRecipients(
       return await getMoonbeamTokenTransfers(walletAddress, contractAddress, onProgress, onPartialResults);
 
     case "starknet":
-      return await getStarknetTokenTransfers(walletAddress, contractAddress, onProgress);
+      return await getStarknetTokenTransfers(walletAddress, contractAddress, onProgress, onPartialResults);
 
     default:
       return {
@@ -84,7 +84,16 @@ export function getDefaultContractAddress(blockchain: Blockchain): string {
     case "moonbeam":
       return "0x0000000000000000000000000000000000000802"; // Native GLMR precompile
     case "starknet":
-      return "0x0124aeb495b947201f5faC96fD1138E326AD86195B98df6DEc9009158A533B49"; // LORDS token
+      return "0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d"; // STRK native token
+    default:
+      return "";
+  }
+}
+
+export function getDefaultWalletAddress(blockchain: Blockchain): string {
+  switch (blockchain.id) {
+    case "starknet":
+      return "0x5a7a86d6113c8860f90f96ea1c8e70a747333feabb40b0584c3936fa6f86717"; // Example Starknet wallet
     default:
       return "";
   }

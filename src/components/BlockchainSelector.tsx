@@ -5,7 +5,7 @@ import { useState, useRef, useEffect } from "react";
 export interface Blockchain {
   id: string;
   name: string;
-  chainId: number;
+  chainId: number | string; // string for very large chain IDs like Starknet
   apiUrl: string;
   explorerUrl: string;
   nativeCurrency: string;
@@ -13,6 +13,14 @@ export interface Blockchain {
 }
 
 export const SUPPORTED_BLOCKCHAINS: Blockchain[] = [
+  {
+    id: "starknet",
+    name: "Starknet",
+    chainId: "SN_MAIN",
+    apiUrl: "https://alpha-mainnet.starknet.io",
+    explorerUrl: "https://starkscan.co",
+    nativeCurrency: "ETH"
+  },
   {
     id: "bsc",
     name: "BNB Smart Chain",
@@ -28,14 +36,6 @@ export const SUPPORTED_BLOCKCHAINS: Blockchain[] = [
     apiUrl: "https://api.etherscan.io/v2/api",
     explorerUrl: "https://moonscan.io",
     nativeCurrency: "GLMR"
-  },
-  {
-    id: "starknet",
-    name: "Starknet",
-    chainId: 23448594291968334,
-    apiUrl: "https://alpha-mainnet.starknet.io",
-    explorerUrl: "https://starkscan.co",
-    nativeCurrency: "ETH"
   }
 ];
 
@@ -102,7 +102,7 @@ export function BlockchainSelector({
               className="w-full px-4 py-3 text-left text-gray-800 hover:bg-white/20 transition-colors duration-200 first:rounded-t-xl last:rounded-b-xl flex items-center space-x-3"
             >
               <div className="w-6 h-6 rounded-full bg-gradient-to-r from-blue-400 to-purple-500"></div>
-              <div>
+              <div className="flex-1">
                 <div className="font-medium">{blockchain.name}</div>
                 <div className="text-sm text-gray-600">{blockchain.nativeCurrency}</div>
               </div>
