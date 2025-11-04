@@ -290,7 +290,7 @@ async function getSTRKTransfersForWallet(
                   transactionHash: parsed.transactionHash
                 });
               }
-            } catch (e) {
+            } catch {
               // Skip invalid addresses
             }
           }
@@ -643,7 +643,6 @@ export async function getStarknetTokenTransfers(
       let searchedBlocks = 0;
       let chunkNumber = 0;
       let totalEvents = 0;
-      let totalPages = 0;
 
       // Search in reverse chronological order (newest first)
       while (searchedBlocks < MAX_BLOCKS_TO_SEARCH) {
@@ -691,7 +690,7 @@ export async function getStarknetTokenTransfers(
                     console.log(`✅ Match #${outgoingTransfers.length}: Block ${parsed.blockNumber}, TX ${parsed.transactionHash.slice(0, 10)}...`);
                   }
                 }
-              } catch (e) {
+              } catch {
                 // Skip invalid addresses
               }
             }
@@ -715,8 +714,6 @@ export async function getStarknetTokenTransfers(
           }
 
         } while (continuationToken && pageCount < 10);
-
-        totalPages += pageCount;
 
         // Break if we've reached the beginning of the chain
         if (fromBlock === 1) break;
