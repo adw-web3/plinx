@@ -389,10 +389,20 @@ async function getSTRKTransfersForWallet(
       }
     }
 
-    // Get balances
+    // Get balances with progress updates
     const recipients: StarknetRecipientAnalysis[] = [];
+    const totalRecipients = recipientMap.size;
+    let processedRecipients = 0;
+
+    console.log(`Fetching balances for ${totalRecipients} recipients...`);
 
     for (const [address, data] of recipientMap.entries()) {
+      processedRecipients++;
+
+      // Update progress during balance fetching
+      const progressPercent = ((processedRecipients / totalRecipients) * 100).toFixed(0);
+      onProgress?.(4, totalSteps, `Fetching balances: ${processedRecipients}/${totalRecipients} (${progressPercent}%)...`);
+
       try {
         const currentBalance = await getStarknetTokenBalance(address, contractAddress);
 
@@ -761,11 +771,19 @@ export async function getStarknetTokenTransfers(
         }
       }
 
-      // Get current balances for recipients
+      // Get current balances for recipients with progress tracking
       const recipients: StarknetRecipientAnalysis[] = [];
+      const totalRecipients = recipientMap.size;
+      let processedRecipients = 0;
 
-      console.log(`Processing ${recipientMap.size} unique recipients:`);
+      console.log(`Processing ${totalRecipients} unique recipients:`);
       for (const [address, data] of recipientMap.entries()) {
+        processedRecipients++;
+
+        // Update progress during balance fetching
+        const progressPercent = ((processedRecipients / totalRecipients) * 100).toFixed(0);
+        onProgress?.(5, totalSteps, `Fetching balances: ${processedRecipients}/${totalRecipients} (${progressPercent}%)...`);
+
         console.log(`Recipient: ${address}, totalReceived: ${data.totalReceived.toString()}, transferCount: ${data.transferCount}`);
 
         try {
