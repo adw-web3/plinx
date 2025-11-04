@@ -1,4 +1,4 @@
-import { RpcProvider, Contract, validateAndParseAddress, hash, num } from "starknet";
+import { RpcProvider, Contract, validateAndParseAddress, hash, num, constants } from "starknet";
 import { formatTokenValue } from "./bsc-api";
 
 export interface StarknetTransaction {
@@ -66,21 +66,16 @@ export interface StarknetEventsResponse {
   continuation_token?: string;
 }
 
-// Free Starknet RPC endpoints (no API key required)
-// Source: https://www.comparenodes.com/library/public-endpoints/starknet/
-const FREE_STARKNET_RPC_ENDPOINTS = [
-  "https://starknet-mainnet.public.blastapi.io",          // Blast API
-  "https://starknet-rpc.publicnode.com",                  // Allnodes
-  "https://1rpc.io/starknet",                             // 1RPC
-  "https://starknet.drpc.org",                            // dRPC
-  "https://rpc.starknet.lava.build",                      // Lava
-  "https://endpoints.omniatech.io/v1/starknet/mainnet/public", // OMNIA
-  "https://starknet.api.onfinality.io/public",            // OnFinality
-  "https://starknet-mainnet.reddio.com/rpc/v0_7"         // Reddio
-];
+// Alchemy Starknet RPC configuration
+// The RPC URL is now set via environment variable NEXT_PUBLIC_STARKNET_RPC_URL
+// Default fallback to Alchemy if no environment variable is set
+const ALCHEMY_API_KEY = process.env.NEXT_PUBLIC_ALCHEMY_STARKNET_API_KEY || "";
+const ALCHEMY_STARKNET_RPC_URL = ALCHEMY_API_KEY
+  ? `https://starknet-mainnet.g.alchemy.com/starknet/version/rpc/v0_7/${ALCHEMY_API_KEY}`
+  : "";
 
-// Starknet RPC configuration
-const STARKNET_RPC_URL = process.env.NEXT_PUBLIC_STARKNET_RPC_URL || FREE_STARKNET_RPC_ENDPOINTS[0];
+// Starknet RPC configuration - prioritize environment variable
+const STARKNET_RPC_URL = process.env.NEXT_PUBLIC_STARKNET_RPC_URL || ALCHEMY_STARKNET_RPC_URL;
 
 // ERC-20 Token ABI for Starknet (simplified)
 const ERC20_ABI = [
@@ -130,7 +125,8 @@ let starknetProvider: RpcProvider | null = null;
 function getStarknetProvider(): RpcProvider {
   if (!starknetProvider) {
     starknetProvider = new RpcProvider({
-      nodeUrl: STARKNET_RPC_URL
+      nodeUrl: STARKNET_RPC_URL,
+      chainId: constants.StarknetChainId.SN_MAIN
     });
   }
   return starknetProvider;
