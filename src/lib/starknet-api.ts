@@ -230,11 +230,17 @@ async function getSTRKTransfersForWallet(
 
     onProgress?.(3, totalSteps, "Analyzing wallet transaction history...");
 
+    // Normalize the wallet address once at the beginning
+    const normalizedWalletAddress = validateAndParseAddress(walletAddress);
+    console.log(`Normalized wallet address: ${normalizedWalletAddress}`);
+
     // Since Voyager/Starkscan APIs might be rate-limited or require auth,
     // let's use a hybrid approach: get recent blocks and filter for our wallet's transactions
     const currentBlock = await provider.getBlock('latest');
     const BLOCKS_TO_SEARCH = 20000; // ~7 days at 2 blocks/min
 
+    console.log(`Current block number: ${currentBlock.block_number}`);
+    console.log(`Current block hash: ${currentBlock.block_hash}`);
     console.log(`Searching last ${BLOCKS_TO_SEARCH} blocks for wallet activity`);
 
     const outgoingTransfers: Array<{
@@ -267,34 +273,49 @@ async function getSTRKTransfersForWallet(
       }
 
       try {
-        // Get events for this block range
-        const eventsResponse = await provider.getEvents({
-          address: validatedContract,
-          from_block: { block_number: fromBlock },
-          to_block: { block_number: toBlock },
-          keys: [[transferEventHash]],
-          chunk_size: 1000 // Get all events in this small range
-        });
+        // Get events for this block range with pagination
+        let continuationToken;
+        let pageCount = 0;
 
-        // Process events to find wallet matches
-        for (const event of eventsResponse.events) {
-          const parsed = parseTransferEvent(event);
-          if (parsed) {
-            try {
-              const normalizedFromAddress = validateAndParseAddress(parsed.from);
-              if (normalizedFromAddress === walletAddress) {
-                outgoingTransfers.push({
-                  to: parsed.to,
-                  value: parsed.value,
-                  blockNumber: parsed.blockNumber,
-                  transactionHash: parsed.transactionHash
-                });
+        do {
+          const eventsResponse = await provider.getEvents({
+            address: validatedContract,
+            from_block: { block_number: fromBlock },
+            to_block: { block_number: toBlock },
+            keys: [[transferEventHash]],
+            chunk_size: 100,
+            continuation_token: continuationToken
+          });
+
+          // Process events to find wallet matches
+          for (const event of eventsResponse.events) {
+            const parsed = parseTransferEvent(event);
+            if (parsed) {
+              try {
+                const normalizedFromAddress = validateAndParseAddress(parsed.from);
+                if (normalizedFromAddress === normalizedWalletAddress) {
+                  outgoingTransfers.push({
+                    to: parsed.to,
+                    value: parsed.value,
+                    blockNumber: parsed.blockNumber,
+                    transactionHash: parsed.transactionHash
+                  });
+                }
+              } catch {
+                // Skip invalid addresses
               }
-            } catch {
-              // Skip invalid addresses
             }
           }
-        }
+
+          continuationToken = eventsResponse.continuation_token;
+          pageCount++;
+
+          // Rate limiting between pages
+          if (continuationToken) {
+            await new Promise(resolve => setTimeout(resolve, 50));
+          }
+
+        } while (continuationToken && pageCount < 20); // Max 20 pages per chunk to avoid getting stuck
 
         // Send live updates if we found new transfers and enough time has passed
         const now = Date.now();
@@ -613,6 +634,9 @@ export async function getStarknetTokenTransfers(
       const provider = getStarknetProvider();
       const currentBlock = await provider.getBlock('latest');
       const transferEventHash = getTransferEventHash();
+
+      console.log(`Current block number: ${currentBlock.block_number}`);
+      console.log(`Current block hash: ${currentBlock.block_hash}`);
 
       // Strategy for very active tokens (like STRK):
       // Use a two-phase approach:
