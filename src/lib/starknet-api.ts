@@ -685,7 +685,7 @@ export async function getStarknetTokenTransfers(
       let totalEvents = 0;
 
       // Helper function to process a new recipient immediately (fetch balance & timestamp)
-      const processNewRecipient = async (address: string, data: { totalReceived: bigint; transferCount: number; lastBlockNumber: number; arrayIndex: number }) => {
+      const processNewRecipient = async (address: string, data: { totalReceived: bigint; transferCount: number; lastBlockNumber: number; arrayIndex: number; currentBalance?: string; lastTransferTime?: string }) => {
         console.log(`Processing new recipient: ${address}, totalReceived: ${data.totalReceived.toString()}, transferCount: ${data.transferCount}`);
 
         try {
