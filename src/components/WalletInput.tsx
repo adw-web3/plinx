@@ -20,7 +20,7 @@ interface WalletInputProps {
 const getDefaultWalletAddress = (blockchain: Blockchain): string => {
   switch (blockchain.id) {
     case "starknet":
-      return "0x42323c9947c5762094c09cccec76cabcfeeaaeda3edfc54d79817e4959dc0fa"; // Starknet Startup House wallet
+      return "0x05a7a86d6113c8860f90f96ea1c8e70a747333feabb40b0584c3936fa6f86717"; // Starknet Startup House wallet
     case "bsc":
       return "0x9758e930B7d78870b3fC1D1AC4E2159F243b27d3";
     case "moonbeam":

@@ -85,7 +85,7 @@ export function getDefaultContractAddress(blockchain: Blockchain): string {
     case "moonbeam":
       return "0x0000000000000000000000000000000000000802"; // Native GLMR precompile
     case "starknet":
-      return "0x0124aeb495b947201f5faC96fD1138E326AD86195B98df6DEc9009158A533B49"; // Custom token contract
+      return "0x01B3028E81e0604fD34EB439b610bd9a405c02C90Ae8569e47477B2E3d965b82"; // Custom token contract
     default:
       return "";
   }
