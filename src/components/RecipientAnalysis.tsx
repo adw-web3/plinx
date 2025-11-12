@@ -46,6 +46,7 @@ export function RecipientAnalysisComponent({ recipients, totalTransfers, tokenSy
   // Show stats and recipients table even when loading (with live updates)
   const showNoResults = !loading && recipients.length === 0;
 
+  // Don't render anything if not loading and no data
   if (showNoResults) {
     return (
       <div className="w-full max-w-6xl">
@@ -56,46 +57,51 @@ export function RecipientAnalysisComponent({ recipients, totalTransfers, tokenSy
     );
   }
 
+  // Show stats immediately when loading starts or when we have data
+  const shouldShowStats = loading || recipients.length > 0;
+
   return (
-    <div className="w-full max-w-6xl space-y-6">
-      {/* Summary Stats - Always visible with live updates */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-white/10 backdrop-blur-sm rounded-2xl border-2 border-white/30 p-6">
-          <div className="text-sm font-semibold text-white/70">Total Recipients</div>
-          <div className={`text-3xl font-bold text-white mt-2 ${loading ? 'animate-pulse' : ''}`}>
+    <div className="w-full max-w-6xl space-y-3">
+      {/* Summary Stats - Visible during loading and after with live updates */}
+      {shouldShowStats && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+          <div className="bg-white/10 backdrop-blur-sm rounded-xl border-2 border-white/30 p-4">
+          <div className="text-xs font-semibold text-white/70 uppercase tracking-wide">Total Recipients</div>
+          <div className={`text-2xl font-bold text-white mt-1 ${loading ? 'animate-pulse' : ''}`}>
             {recipients.length}
-            {loading && <span className="text-lg text-white/60 ml-2">analyzing...</span>}
+            {loading && <span className="text-sm text-white/60 ml-2">analyzing...</span>}
           </div>
-        </div>
-        <div className="bg-white/10 backdrop-blur-sm rounded-2xl border-2 border-white/30 p-6">
-          <div className="text-sm font-semibold text-white/70">Total Distributed</div>
-          <div className={`text-3xl font-bold text-white mt-2 ${loading ? 'animate-pulse' : ''}`}>
-            {formatTokenValue(totalTokensDistributed.toString(), "18")} <span className="text-lg text-white/60">{tokenSymbol || "tokens"}</span>
           </div>
-        </div>
-        <div className="bg-white/10 backdrop-blur-sm rounded-2xl border-2 border-white/30 p-6">
-          <div className="text-sm font-semibold text-white/70">Currently Held</div>
-          <div className={`text-3xl font-bold text-white mt-2 ${loading ? 'animate-pulse' : ''}`}>
-            {formatTokenValue(totalCurrentlyHeld.toString(), "18")} <span className="text-lg text-white/60">{tokenSymbol || "tokens"}</span>
+          <div className="bg-white/10 backdrop-blur-sm rounded-xl border-2 border-white/30 p-4">
+            <div className="text-xs font-semibold text-white/70 uppercase tracking-wide">Total Distributed</div>
+          <div className={`text-2xl font-bold text-white mt-1 ${loading ? 'animate-pulse' : ''}`}>
+            {formatTokenValue(totalTokensDistributed.toString(), "18")} <span className="text-sm text-white/60">{tokenSymbol || "tokens"}</span>
           </div>
-        </div>
-        <div className="bg-white/10 backdrop-blur-sm rounded-2xl border-2 border-white/30 p-6">
-          <div className="text-sm font-semibold text-white/70">Total Airdrop Spots Claimed</div>
-          <div className={`text-3xl font-bold text-white mt-2 ${loading ? 'animate-pulse' : ''}`}>
+          </div>
+          <div className="bg-white/10 backdrop-blur-sm rounded-xl border-2 border-white/30 p-4">
+            <div className="text-xs font-semibold text-white/70 uppercase tracking-wide">Currently Held</div>
+          <div className={`text-2xl font-bold text-white mt-1 ${loading ? 'animate-pulse' : ''}`}>
+            {formatTokenValue(totalCurrentlyHeld.toString(), "18")} <span className="text-sm text-white/60">{tokenSymbol || "tokens"}</span>
+          </div>
+          </div>
+          <div className="bg-white/10 backdrop-blur-sm rounded-xl border-2 border-white/30 p-4">
+            <div className="text-xs font-semibold text-white/70 uppercase tracking-wide">Airdrop Spots</div>
+          <div className={`text-2xl font-bold text-white mt-1 ${loading ? 'animate-pulse' : ''}`}>
             {totalTransfers}
-            {loading && <span className="text-lg text-white/60 ml-2">counting...</span>}
+            {loading && <span className="text-sm text-white/60 ml-2">counting...</span>}
+          </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Recipients List */}
       {(recipients.length > 0 || loading) && (
-        <div className="bg-white/10 backdrop-blur-sm rounded-2xl border-2 border-white/30 overflow-hidden">
-          <div className="px-8 py-6 border-b-2 border-white/30">
-            <h2 className="text-2xl font-bold text-white">
+        <div className="bg-white/10 backdrop-blur-sm rounded-xl border-2 border-white/30 overflow-hidden">
+          <div className="px-5 py-3 border-b-2 border-white/30">
+            <h2 className="text-lg font-bold text-white">
               Token Recipients
               {loading && (
-                <span className="text-lg text-white/60 ml-3 animate-pulse">
+                <span className="text-sm text-white/60 ml-2 animate-pulse">
                   Loading...
                 </span>
               )}
@@ -106,22 +112,22 @@ export function RecipientAnalysisComponent({ recipients, totalTransfers, tokenSy
           <table className="w-full">
             <thead className="bg-white/5">
               <tr>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-white/70 uppercase tracking-wider">
+                <th className="px-4 py-2 text-left text-xs font-semibold text-white/70 uppercase tracking-wider">
                   Recipient Address
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-white/70 uppercase tracking-wider">
+                <th className="px-4 py-2 text-left text-xs font-semibold text-white/70 uppercase tracking-wider">
                   Total Received
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-white/70 uppercase tracking-wider">
+                <th className="px-4 py-2 text-left text-xs font-semibold text-white/70 uppercase tracking-wider">
                   Current Balance
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-white/70 uppercase tracking-wider">
+                <th className="px-4 py-2 text-left text-xs font-semibold text-white/70 uppercase tracking-wider">
                   Transfers
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-white/70 uppercase tracking-wider">
+                <th className="px-4 py-2 text-left text-xs font-semibold text-white/70 uppercase tracking-wider">
                   Last Transfer
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-white/70 uppercase tracking-wider">
+                <th className="px-4 py-2 text-left text-xs font-semibold text-white/70 uppercase tracking-wider">
                   Status
                 </th>
               </tr>
@@ -136,14 +142,14 @@ export function RecipientAnalysisComponent({ recipients, totalTransfers, tokenSy
 
                 return (
                   <tr key={recipient.address} className="hover:bg-white/5 transition-colors">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center space-x-3">
+                    <td className="px-4 py-2 whitespace-nowrap">
+                      <div className="flex items-center space-x-2">
                         <span className="text-sm font-mono text-white">
                           {shortenAddress(recipient.address)}
                         </span>
                         <button
                           onClick={() => navigator.clipboard.writeText(recipient.address)}
-                          className="text-xs text-cyan-300 hover:text-white transition-colors font-medium"
+                          className="text-xs text-cyan-300 hover:text-white transition-colors"
                           title="Copy address"
                         >
                           Copy
@@ -152,29 +158,29 @@ export function RecipientAnalysisComponent({ recipients, totalTransfers, tokenSy
                           href={getBlockchainExplorerUrl(blockchain, recipient.address)}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-xs text-cyan-300 hover:text-white transition-colors font-medium"
+                          className="text-xs text-cyan-300 hover:text-white transition-colors"
                         >
                           View
                         </a>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-4 py-2 whitespace-nowrap">
                       <div className="text-sm font-semibold text-white">
-                        {formatTokenValue(recipient.totalReceived, "18")} <span className="text-white/60">{tokenSymbol || "tokens"}</span>
+                        {formatTokenValue(recipient.totalReceived, "18")} <span className="text-white/60 text-xs">{tokenSymbol || "tokens"}</span>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-4 py-2 whitespace-nowrap">
                       <div className="text-sm font-semibold text-white">
-                        {formatTokenValue(recipient.currentBalance, "18")} <span className="text-white/60">{tokenSymbol || "tokens"}</span>
+                        {formatTokenValue(recipient.currentBalance, "18")} <span className="text-white/60 text-xs">{tokenSymbol || "tokens"}</span>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-4 py-2 whitespace-nowrap">
                       <div className="text-sm text-white">{recipient.transferCount}</div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-4 py-2 whitespace-nowrap">
                       {recipient.lastTransferTime === "0" ? (
-                        <div className="flex items-center space-x-2">
-                          <div className="h-2 w-2 bg-blue-400 rounded-full animate-pulse"></div>
+                        <div className="flex items-center space-x-1">
+                          <div className="h-1.5 w-1.5 bg-blue-400 rounded-full animate-pulse"></div>
                           <span className="text-xs text-white/50 italic">Loading...</span>
                         </div>
                       ) : (
@@ -183,24 +189,24 @@ export function RecipientAnalysisComponent({ recipients, totalTransfers, tokenSy
                         </div>
                       )}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-4 py-2 whitespace-nowrap">
                       {recipient.currentBalance === "0" && recipient.lastTransferTime === "0" ? (
-                        <div className="flex items-center space-x-2">
-                          <div className="h-2 w-2 bg-blue-400 rounded-full animate-pulse"></div>
+                        <div className="flex items-center space-x-1">
+                          <div className="h-1.5 w-1.5 bg-blue-400 rounded-full animate-pulse"></div>
                           <span className="text-xs text-white/50 italic">Checking...</span>
                         </div>
                       ) : (
-                        <div className="flex items-center space-x-3">
-                          <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${
+                        <div className="flex items-center space-x-2">
+                          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold ${
                             currentBalance > 0
-                              ? "bg-green-500/20 text-green-300 border-2 border-green-400/50"
-                              : "bg-gray-500/20 text-gray-300 border-2 border-gray-400/50"
+                              ? "bg-green-500/20 text-green-300 border border-green-400/50"
+                              : "bg-gray-500/20 text-gray-300 border border-gray-400/50"
                           }`}>
-                            {currentBalance > 0 ? "Holding" : "Sold/Transferred"}
+                            {currentBalance > 0 ? "Holding" : "Sold"}
                           </span>
                           {currentBalance > 0 && (
                             <span className="text-xs text-white/60">
-                              {retentionPercentage.toFixed(1)}% retained
+                              {retentionPercentage.toFixed(1)}%
                             </span>
                           )}
                         </div>

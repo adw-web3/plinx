@@ -106,9 +106,9 @@ export function LoadingProgress({
   }
 
   return (
-    <div className="w-full max-w-4xl mx-auto p-4">
-      <div className="bg-white/10 backdrop-blur-sm rounded-2xl border-2 border-white/30 p-8">
-        <div className="space-y-6">
+    <div className="w-full max-w-6xl mx-auto">
+      <div className="bg-white/10 backdrop-blur-sm rounded-lg border border-white/30 p-3">
+        <div className="space-y-1.5">
           {steps.map((step, index) => {
             const stepNumber = index + 1;
             const isCompleted = stepNumber < currentStep;
@@ -132,65 +132,37 @@ export function LoadingProgress({
             }
 
             return (
-              <div key={index} className="space-y-3">
+              <div key={index} className="flex items-center gap-2">
                 <div
-                  className={`flex items-center space-x-4 text-sm ${
+                  className={`flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center text-xs font-semibold ${
                     isCompleted
-                      ? "text-green-300"
+                      ? "bg-green-500/20 text-green-300 border border-green-400/50"
                       : isCurrent
-                      ? "text-white font-semibold"
-                      : "text-white/60"
+                      ? "bg-[#517ec5]/20 text-white border border-[#517ec5]/60"
+                      : "bg-white/10 text-white/60 border border-white/30"
                   }`}
                 >
-                  <div
-                    className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold ${
-                      isCompleted
-                        ? "bg-green-500/20 text-green-300 border-2 border-green-400/50"
-                        : isCurrent
-                        ? "bg-[#517ec5]/20 text-white border-2 border-[#517ec5]/60"
-                        : "bg-white/10 text-white/60 border-2 border-white/30"
-                    }`}
-                  >
-                    {isCompleted ? "✓" : stepNumber}
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex justify-between items-center">
-                      <span>{step}</span>
-                      <div className="flex items-center space-x-3">
-                        <span className="text-xs text-white/70 font-mono">
-                          {Math.round(stepProgress)}%
-                        </span>
-                        {isCurrent && (
-                          <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-[#517ec5]"></div>
-                        )}
-                      </div>
-                    </div>
-                    {isCurrent && progressMessage && progressMessage !== step && (
-                      <div className="text-xs text-white/70 mt-1 font-normal">
-                        {progressMessage}
-                      </div>
+                  {isCompleted ? "✓" : stepNumber}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className={`text-xs truncate ${
+                      isCompleted ? "text-green-300" : isCurrent ? "text-white" : "text-white/60"
+                    }`}>
+                      {step}
+                    </span>
+                    <span className="text-xs text-white/60 font-mono flex-shrink-0">
+                      {Math.round(stepProgress)}%
+                    </span>
+                    {isCurrent && (
+                      <div className="animate-spin rounded-full h-3 w-3 border-b border-[#517ec5] flex-shrink-0"></div>
                     )}
                   </div>
-                </div>
-
-                {/* Individual step progress bar */}
-                <div className="ml-12">
-                  <div className="w-full bg-white/10 rounded-full overflow-hidden h-2">
-                    <div
-                      className={`h-2 rounded-full transition-all duration-500 ease-out ${
-                        isCompleted
-                          ? "bg-green-400"
-                          : isCurrent
-                          ? "bg-[#517ec5]"
-                          : "bg-sky-300"
-                      }`}
-                      style={{ width: `${stepProgress}%` }}
-                    >
-                      {isCurrent && (
-                        <div className="h-full bg-white bg-opacity-30 animate-pulse" />
-                      )}
+                  {isCurrent && progressMessage && progressMessage !== step && (
+                    <div className="text-xs text-white/60 mt-0.5 truncate">
+                      {progressMessage}
                     </div>
-                  </div>
+                  )}
                 </div>
               </div>
             );

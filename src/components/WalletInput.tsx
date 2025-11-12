@@ -12,13 +12,15 @@ const STRK_CONTRACT_ADDRESS = "0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab0
 interface WalletInputProps {
   onAddressSubmit: (address: string, contractAddress: string, blockchain: Blockchain) => void;
   loading?: boolean;
+  currentWallet?: string;
+  currentContract?: string;
 }
 
 // Default wallet addresses for easy testing
 const getDefaultWalletAddress = (blockchain: Blockchain): string => {
   switch (blockchain.id) {
     case "starknet":
-      return "0x5a7a86d6113c8860f90f96ea1c8e70a747333feabb40b0584c3936fa6f86717"; // Starknet wallet with STRK activity
+      return "0x42323c9947c5762094c09cccec76cabcfeeaaeda3edfc54d79817e4959dc0fa"; // Starknet Startup House wallet
     case "bsc":
       return "0x9758e930B7d78870b3fC1D1AC4E2159F243b27d3";
     case "moonbeam":
@@ -28,7 +30,7 @@ const getDefaultWalletAddress = (blockchain: Blockchain): string => {
   }
 };
 
-export function WalletInput({ onAddressSubmit, loading = false }: WalletInputProps) {
+export function WalletInput({ onAddressSubmit, loading = false, currentWallet = "", currentContract = "" }: WalletInputProps) {
   // Starknet is now the fixed blockchain (first in SUPPORTED_BLOCKCHAINS array)
   const selectedBlockchain = SUPPORTED_BLOCKCHAINS[0];
   const [address, setAddress] = useState(getDefaultWalletAddress(selectedBlockchain));
@@ -77,14 +79,36 @@ export function WalletInput({ onAddressSubmit, loading = false }: WalletInputPro
     onAddressSubmit(address.trim(), contractAddress, selectedBlockchain);
   };
 
+  // If we're currently analyzing a wallet, show compact info view
+  if (currentWallet) {
+    return (
+      <div className="w-full max-w-6xl">
+        <div className="bg-white/10 backdrop-blur-sm rounded-lg border border-white/30 p-3">
+          <div className="flex flex-col gap-1">
+            <div className="text-xs text-white/60">Analyzing wallet on {selectedBlockchain.name}:</div>
+            <code className="text-xs font-mono text-white/90 break-all">
+              {currentWallet}
+            </code>
+            {currentContract && (
+              <div className="text-xs text-white/60">
+                Token Contract: <span className="font-mono text-white/90">{currentContract}</span>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Otherwise, show the full form
   return (
     <div className="w-full max-w-2xl">
-      <div className="bg-white/10 backdrop-blur-lg rounded-2xl border-2 border-white/30 p-8">
-        <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="bg-white/10 backdrop-blur-lg rounded-xl border-2 border-white/30 p-5">
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label
               htmlFor="wallet-address"
-              className="block text-sm font-semibold text-white mb-3"
+              className="block text-sm font-semibold text-white mb-2"
             >
               {selectedBlockchain.name} Wallet Address
             </label>
@@ -94,22 +118,22 @@ export function WalletInput({ onAddressSubmit, loading = false }: WalletInputPro
               value={address}
               onChange={(e) => setAddress(e.target.value)}
               placeholder="0x742d35Cc6635C0532925a3b8D000b73B2d9B2E9F"
-              className="w-full px-4 py-4 border-2 border-white/40 rounded-xl focus:ring-2 focus:ring-[#517ec5] focus:border-[#517ec5] font-mono text-sm text-white bg-white/10 backdrop-blur-sm placeholder-white/60 transition-all duration-200"
+              className="w-full px-3 py-3 border-2 border-white/40 rounded-lg focus:ring-2 focus:ring-[#517ec5] focus:border-[#517ec5] font-mono text-sm text-white bg-white/10 backdrop-blur-sm placeholder-white/60 transition-all duration-200"
               disabled={loading}
             />
             {error && (
-              <p className="mt-3 text-sm text-red-300 bg-red-500/20 p-3 rounded-lg border-2 border-red-400/50">{error}</p>
+              <p className="mt-2 text-sm text-red-300 bg-red-500/20 p-2 rounded-lg border-2 border-red-400/50">{error}</p>
             )}
           </div>
           <div>
             <label
               htmlFor="token-contract"
-              className="block text-sm font-semibold text-white mb-3 flex items-center gap-2"
+              className="block text-sm font-semibold text-white mb-2 flex items-center gap-2"
             >
               <span>Token Contract Address</span>
               {isSTRKContract && (
-                <span className="text-xs bg-blue-500/80 text-white px-2 py-1 rounded-full font-normal">
-                  Native Token - Optimized Search
+                <span className="text-xs bg-blue-500/80 text-white px-2 py-0.5 rounded-full font-normal">
+                  Native Token
                 </span>
               )}
             </label>
@@ -119,16 +143,16 @@ export function WalletInput({ onAddressSubmit, loading = false }: WalletInputPro
               value={contractAddress}
               onChange={(e) => setContractAddress(e.target.value)}
               placeholder="0xfF1E54d02B5d0576E7BEfD03602E36d5720D1997"
-              className="w-full px-4 py-4 border-2 border-white/40 rounded-xl focus:ring-2 focus:ring-[#517ec5] focus:border-[#517ec5] font-mono text-sm text-white bg-white/10 backdrop-blur-sm placeholder-white/60 transition-all duration-200"
+              className="w-full px-3 py-3 border-2 border-white/40 rounded-lg focus:ring-2 focus:ring-[#517ec5] focus:border-[#517ec5] font-mono text-sm text-white bg-white/10 backdrop-blur-sm placeholder-white/60 transition-all duration-200"
               disabled={loading}
             />
           </div>
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-[#517ec5] border-2 border-[#4f7dc4] text-white py-4 px-6 rounded-xl hover:bg-[#466daa] hover:border-[#406bb5] focus:ring-4 focus:ring-[#517ec5]/50 disabled:opacity-50 disabled:cursor-not-allowed font-semibold text-lg transform transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
+            className="w-full bg-[#517ec5] border-2 border-[#4f7dc4] text-white py-3 px-5 rounded-lg hover:bg-[#466daa] hover:border-[#406bb5] focus:ring-4 focus:ring-[#517ec5]/50 disabled:opacity-50 disabled:cursor-not-allowed font-semibold text-base transform transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
           >
-            {loading ? "Loading Transactions..." : "Analyse AirDrop"}
+            {loading ? "Analyzing..." : "Fetch AirDrop data from blockchain"}
           </button>
         </form>
       </div>

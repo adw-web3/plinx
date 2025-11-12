@@ -653,13 +653,18 @@ export async function getStarknetTokenTransfers(
 
       onProgress?.(4, totalSteps, `Scanning recent blocks for transfers...`);
 
-      // Store matching transfers as we find them (don't wait until the end)
-      const outgoingTransfers: Array<{
-        to: string;
-        value: string;
-        blockNumber: number;
-        transactionHash: string;
-      }> = [];
+      // Track recipients as we find them and process immediately
+      const recipientMap = new Map<string, {
+        totalReceived: bigint;
+        transferCount: number;
+        lastBlockNumber: number;
+        currentBalance?: string;
+        lastTransferTime?: string;
+        arrayIndex?: number; // Track position in recipients array
+      }>();
+
+      const recipients: StarknetRecipientAnalysis[] = [];
+      let totalTransfers = 0;
 
       const normalizedWalletAddress = validateAndParseAddress(walletAddress);
       console.log(`Looking for transfers from: ${normalizedWalletAddress}`);
@@ -667,6 +672,73 @@ export async function getStarknetTokenTransfers(
       let searchedBlocks = 0;
       let chunkNumber = 0;
       let totalEvents = 0;
+
+      // Helper function to process a new recipient immediately (fetch balance & timestamp)
+      const processNewRecipient = async (address: string, data: { totalReceived: bigint; transferCount: number; lastBlockNumber: number; arrayIndex: number }) => {
+        console.log(`Processing new recipient: ${address}, totalReceived: ${data.totalReceived.toString()}, transferCount: ${data.transferCount}`);
+
+        try {
+          const currentBalance = await getStarknetTokenBalance(address, contractAddress);
+          console.log(`Balance query for ${address}: ${formatTokenValue(currentBalance, "18")} ${tokenSymbol}`);
+
+          // Get actual timestamp from the block
+          let lastTransferTime = data.lastBlockNumber.toString();
+          try {
+            const blockDetails = await provider.getBlock(data.lastBlockNumber);
+            if (blockDetails.timestamp) {
+              lastTransferTime = blockDetails.timestamp.toString();
+            }
+          } catch {
+            console.warn(`Could not get timestamp for block ${data.lastBlockNumber}, using block number`);
+          }
+
+          // Store balance and timestamp in map
+          data.currentBalance = currentBalance;
+          data.lastTransferTime = lastTransferTime;
+
+          // Create recipient data
+          const recipientData = {
+            address,
+            totalReceived: data.totalReceived.toString(),
+            currentBalance,
+            transferCount: data.transferCount,
+            lastTransferTime
+          };
+          console.log(`✅ Created recipient data:`, recipientData);
+          recipients.push(recipientData);
+
+          // Send partial results immediately after each recipient is processed
+          onPartialResults?.([...recipients], totalTransfers, tokenSymbol);
+        } catch (balanceError) {
+          console.error(`Failed to get balance for ${address}:`, balanceError);
+
+          // Get actual timestamp from the block
+          let lastTransferTime = data.lastBlockNumber.toString();
+          try {
+            const blockDetails = await provider.getBlock(data.lastBlockNumber);
+            if (blockDetails.timestamp) {
+              lastTransferTime = blockDetails.timestamp.toString();
+            }
+          } catch {
+            console.warn(`Could not get timestamp for block ${data.lastBlockNumber}, using block number`);
+          }
+
+          // Store fallback values
+          data.currentBalance = "0";
+          data.lastTransferTime = lastTransferTime;
+
+          recipients.push({
+            address,
+            totalReceived: data.totalReceived.toString(),
+            currentBalance: "0",
+            transferCount: data.transferCount,
+            lastTransferTime
+          });
+
+          // Send partial results even on error
+          onPartialResults?.([...recipients], totalTransfers, tokenSymbol);
+        }
+      };
 
       // Search in reverse chronological order (newest first)
       while (searchedBlocks < MAX_BLOCKS_TO_SEARCH) {
@@ -676,8 +748,8 @@ export async function getStarknetTokenTransfers(
         searchedBlocks += (toBlock - fromBlock);
 
         if (chunkNumber % 10 === 0) {
-          console.log(`Chunk ${chunkNumber}: Blocks ${fromBlock}-${toBlock} (${searchedBlocks}/${MAX_BLOCKS_TO_SEARCH} searched, ${outgoingTransfers.length} transfers found)`);
-          onProgress?.(4, totalSteps, `Scanned ${searchedBlocks.toLocaleString()} blocks, found ${outgoingTransfers.length} transfers...`);
+          console.log(`Chunk ${chunkNumber}: Blocks ${fromBlock}-${toBlock} (${searchedBlocks}/${MAX_BLOCKS_TO_SEARCH} searched, ${totalTransfers} transfers found, ${recipients.length} recipients processed)`);
+          onProgress?.(4, totalSteps, `Scanned ${searchedBlocks.toLocaleString()} blocks, found ${totalTransfers} transfers, processed ${recipients.length} recipients...`);
         }
 
         let continuationToken: string | undefined;
@@ -702,16 +774,49 @@ export async function getStarknetTokenTransfers(
               try {
                 const normalizedFromAddress = validateAndParseAddress(parsed.from);
                 if (normalizedFromAddress === normalizedWalletAddress) {
-                  outgoingTransfers.push({
-                    to: parsed.to,
-                    value: parsed.value,
-                    blockNumber: parsed.blockNumber,
-                    transactionHash: parsed.transactionHash
-                  });
+                  totalTransfers++;
+                  const recipient = parsed.to;
+                  const value = BigInt(parsed.value);
+
+                  // Update or create recipient in map
+                  const existing = recipientMap.get(recipient);
+
+                  if (existing) {
+                    // Update totals for existing recipient
+                    existing.totalReceived += value;
+                    existing.transferCount += 1;
+                    existing.lastBlockNumber = Math.max(existing.lastBlockNumber, parsed.blockNumber);
+
+                    // Update the recipient in the array if they've been processed
+                    if (existing.arrayIndex !== undefined && existing.currentBalance !== undefined && existing.lastTransferTime !== undefined) {
+                      recipients[existing.arrayIndex] = {
+                        address: recipient,
+                        totalReceived: existing.totalReceived.toString(),
+                        currentBalance: existing.currentBalance,
+                        transferCount: existing.transferCount,
+                        lastTransferTime: existing.lastTransferTime
+                      };
+                      // Send update to UI
+                      onPartialResults?.([...recipients], totalTransfers, tokenSymbol);
+                    }
+                  } else {
+                    // New recipient found! Process immediately
+                    const arrayIndex = recipients.length;
+                    const newRecipientData = {
+                      totalReceived: value,
+                      transferCount: 1,
+                      lastBlockNumber: parsed.blockNumber,
+                      arrayIndex
+                    };
+                    recipientMap.set(recipient, newRecipientData);
+
+                    // Process this recipient right away (fetch balance & timestamp)
+                    await processNewRecipient(recipient, newRecipientData);
+                  }
 
                   // Log first few matches for debugging
-                  if (outgoingTransfers.length <= 3) {
-                    console.log(`✅ Match #${outgoingTransfers.length}: Block ${parsed.blockNumber}, TX ${parsed.transactionHash.slice(0, 10)}...`);
+                  if (totalTransfers <= 3) {
+                    console.log(`✅ Match #${totalTransfers}: Block ${parsed.blockNumber}, TX ${parsed.transactionHash.slice(0, 10)}...`);
                   }
                 }
               } catch {
@@ -746,9 +851,10 @@ export async function getStarknetTokenTransfers(
       console.log(`\n=== Search Complete ===`);
       console.log(`Searched ${searchedBlocks.toLocaleString()} blocks (${(searchedBlocks / 2880 * 24).toFixed(1)} hours)`);
       console.log(`Processed ${totalEvents.toLocaleString()} total Transfer events`);
-      console.log(`Found ${outgoingTransfers.length} outgoing transfers from ${walletAddress}`);
+      console.log(`Found ${totalTransfers} outgoing transfers from ${walletAddress}`);
+      console.log(`Processed ${recipients.length} unique recipients`);
 
-      if (outgoingTransfers.length === 0) {
+      if (totalTransfers === 0) {
         console.warn(`❌ No outgoing transfers found for wallet ${walletAddress}`);
         console.warn(`This could mean:`);
         console.warn(`  - The wallet has never sent tokens of this type`);
@@ -765,97 +871,7 @@ export async function getStarknetTokenTransfers(
         };
       }
 
-      onProgress?.(5, totalSteps, "Analyzing recipients and fetching current balances...");
-
-      // Group transfers by recipient and calculate analytics
-      const recipientMap = new Map<string, {
-        totalReceived: bigint;
-        transferCount: number;
-        lastBlockNumber: number;
-      }>();
-
-      for (const transfer of outgoingTransfers) {
-        const recipient = transfer.to;
-        const value = BigInt(transfer.value);
-        const existing = recipientMap.get(recipient);
-
-        if (existing) {
-          existing.totalReceived += value;
-          existing.transferCount += 1;
-          existing.lastBlockNumber = Math.max(existing.lastBlockNumber, transfer.blockNumber);
-        } else {
-          recipientMap.set(recipient, {
-            totalReceived: value,
-            transferCount: 1,
-            lastBlockNumber: transfer.blockNumber
-          });
-        }
-      }
-
-      // Get current balances for recipients with progress tracking
-      const recipients: StarknetRecipientAnalysis[] = [];
-      const totalRecipients = recipientMap.size;
-      let processedRecipients = 0;
-
-      console.log(`Processing ${totalRecipients} unique recipients:`);
-      for (const [address, data] of recipientMap.entries()) {
-        processedRecipients++;
-
-        // Update progress during balance fetching
-        const progressPercent = ((processedRecipients / totalRecipients) * 100).toFixed(0);
-        onProgress?.(5, totalSteps, `Fetching balances: ${processedRecipients}/${totalRecipients} (${progressPercent}%)...`);
-
-        console.log(`Recipient: ${address}, totalReceived: ${data.totalReceived.toString()}, transferCount: ${data.transferCount}`);
-
-        try {
-          const currentBalance = await getStarknetTokenBalance(address, contractAddress);
-          console.log(`Balance query for ${address}:`);
-          console.log(`  - Raw balance: ${currentBalance}`);
-          console.log(`  - Formatted balance: ${formatTokenValue(currentBalance, "18")} LORDS`);
-
-          // Get actual timestamp from the block
-          let lastTransferTime = data.lastBlockNumber.toString();
-          try {
-            const blockDetails = await provider.getBlock(data.lastBlockNumber);
-            if (blockDetails.timestamp) {
-              lastTransferTime = blockDetails.timestamp.toString();
-            }
-          } catch {
-            console.warn(`Could not get timestamp for block ${data.lastBlockNumber}, using block number`);
-          }
-
-          const recipientData = {
-            address,
-            totalReceived: data.totalReceived.toString(),
-            currentBalance,
-            transferCount: data.transferCount,
-            lastTransferTime
-          };
-          console.log(`✅ Created recipient data:`, recipientData);
-          recipients.push(recipientData);
-        } catch (balanceError) {
-          console.error(`Failed to get balance for ${address}:`, balanceError);
-
-          // Get actual timestamp from the block
-          let lastTransferTime = data.lastBlockNumber.toString();
-          try {
-            const blockDetails = await provider.getBlock(data.lastBlockNumber);
-            if (blockDetails.timestamp) {
-              lastTransferTime = blockDetails.timestamp.toString();
-            }
-          } catch {
-            console.warn(`Could not get timestamp for block ${data.lastBlockNumber}, using block number`);
-          }
-
-          recipients.push({
-            address,
-            totalReceived: data.totalReceived.toString(),
-            currentBalance: "0",
-            transferCount: data.transferCount,
-            lastTransferTime
-          });
-        }
-      }
+      onProgress?.(5, totalSteps, "Finalizing analysis...");
 
       console.log(`Final recipients array:`, recipients);
 
@@ -868,7 +884,7 @@ export async function getStarknetTokenTransfers(
 
       const result = {
         recipients,
-        totalTransfers: outgoingTransfers.length,
+        totalTransfers,
         tokenSymbol,
         isDemo: false
       };

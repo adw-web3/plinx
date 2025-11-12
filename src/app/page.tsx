@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { WalletInput } from "@/components/WalletInput";
 import { RecipientAnalysisComponent } from "@/components/RecipientAnalysis";
 import { LoadingProgress } from "@/components/ProgressBar";
@@ -18,6 +18,7 @@ export default function Home() {
   const [currentBlockchain, setCurrentBlockchain] = useState<Blockchain>(SUPPORTED_BLOCKCHAINS[0]);
   const [isDemo, setIsDemo] = useState(false);
   const [progress, setProgress] = useState({ currentStep: 0, totalSteps: 0, message: "" });
+  const resultsRef = useRef<HTMLDivElement>(null);
 
   const handleAddressSubmit = async (address: string, contractAddress: string, blockchain: Blockchain) => {
     setLoading(true);
@@ -32,6 +33,11 @@ export default function Home() {
     setTotalTransfers(0);
     setTokenSymbol("");
     setIsDemo(false);
+
+    // Scroll to results section after a brief delay to let the DOM update
+    setTimeout(() => {
+      resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 100);
 
     try {
       const result = await getTokenRecipients(
@@ -70,39 +76,29 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-[#507dc4] py-8">
+    <div className="min-h-screen bg-[#507dc4] py-4">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-12">
-          <h1 className="text-4xl md:text-5xl font-black text-white mb-4">
-            Tubbly AirDrop Analytics
+        <div className="text-center mb-6">
+          <h1 className="text-3xl md:text-4xl font-black text-white mb-2">
+            Starknet Startup House Treasure Competition
           </h1>
-          <p className="text-white/80 text-lg max-w-3xl mx-auto">
-            Enter a wallet address and select a token contract to analyze all recipients and their current holdings
+          <p className="text-white/80 text-base max-w-3xl mx-auto">
+            Track who is collecting the most Starknet Startup House Tokens - the winner takes all!
           </p>
         </div>
 
-        <div className="flex flex-col items-center space-y-8">
+        <div className="flex flex-col items-center space-y-4">
           <WalletInput
             onAddressSubmit={handleAddressSubmit}
             loading={loading}
+            currentWallet={currentWallet}
+            currentContract={currentContract}
           />
 
           {currentWallet && (
-            <div className="w-full max-w-6xl space-y-6">
-              <div className="bg-white/10 backdrop-blur-sm rounded-2xl border-2 border-white/30 p-6">
-                <h3 className="text-sm font-medium text-white/70 mb-2">Analyzing wallet on {currentBlockchain.name}:</h3>
-                <code className="text-sm font-mono text-white break-all bg-black/20 p-3 rounded-lg block">
-                  {currentWallet}
-                </code>
-                {currentContract && (
-                  <p className="text-xs text-white/70 mt-3">
-                    Token Contract: <span className="font-mono">{currentContract}</span>
-                  </p>
-                )}
-              </div>
-
+            <div ref={resultsRef} className="w-full max-w-6xl space-y-3">
               {isDemo && (
-                <div className="bg-yellow-500/20 backdrop-blur-sm border-2 border-yellow-400/50 rounded-2xl p-6">
+                <div className="bg-yellow-500/20 backdrop-blur-sm border-2 border-yellow-400/50 rounded-xl p-4">
                   <div className="flex">
                     <div className="flex-shrink-0">
                       <svg className="h-6 w-6 text-yellow-300" viewBox="0 0 20 20" fill="currentColor">
@@ -135,27 +131,31 @@ export default function Home() {
             </div>
           )}
 
-          <LoadingProgress
-            currentStep={progress.currentStep - 1}
-            totalSteps={progress.totalSteps - 1}
-            steps={[
-              `Fetching token transfers from ${currentBlockchain.name}...`,
-              "Processing transaction data...",
-              "Analyzing recipient patterns...",
-              "Finalizing recipient analysis..."
-            ]}
-            isLoading={loading}
-            progressMessage={progress.message}
-          />
+          {(loading || recipients.length > 0) && (
+            <>
+              <LoadingProgress
+                currentStep={progress.currentStep - 1}
+                totalSteps={progress.totalSteps - 1}
+                steps={[
+                  `Fetching token transfers from ${currentBlockchain.name}...`,
+                  "Processing transaction data...",
+                  "Analyzing recipient patterns...",
+                  "Finalizing recipient analysis..."
+                ]}
+                isLoading={loading}
+                progressMessage={progress.message}
+              />
 
-          <RecipientAnalysisComponent
-            recipients={recipients}
-            totalTransfers={totalTransfers}
-            tokenSymbol={tokenSymbol}
-            loading={loading}
-            error={error}
-            blockchain={currentBlockchain}
-          />
+              <RecipientAnalysisComponent
+                recipients={recipients}
+                totalTransfers={totalTransfers}
+                tokenSymbol={tokenSymbol}
+                loading={loading}
+                error={error}
+                blockchain={currentBlockchain}
+              />
+            </>
+          )}
         </div>
       </div>
     </div>
