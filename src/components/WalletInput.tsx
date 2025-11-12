@@ -79,25 +79,9 @@ export function WalletInput({ onAddressSubmit, loading = false, currentWallet = 
     onAddressSubmit(address.trim(), contractAddress, selectedBlockchain);
   };
 
-  // If we're currently analyzing a wallet, show compact info view
+  // If we're currently analyzing a wallet, hide the form
   if (currentWallet) {
-    return (
-      <div className="w-full max-w-6xl">
-        <div className="bg-white/10 backdrop-blur-sm rounded-lg border border-white/30 p-3">
-          <div className="flex flex-col gap-1">
-            <div className="text-xs text-white/60">Analyzing wallet on {selectedBlockchain.name}:</div>
-            <code className="text-xs font-mono text-white/90 break-all">
-              {currentWallet}
-            </code>
-            {currentContract && (
-              <div className="text-xs text-white/60">
-                Token Contract: <span className="font-mono text-white/90">{currentContract}</span>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-    );
+    return null;
   }
 
   // Otherwise, show the full form

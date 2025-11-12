@@ -651,6 +651,17 @@ export async function getStarknetTokenTransfers(
 
       console.log(`Searching last ${MAX_BLOCKS_TO_SEARCH} blocks (~17 days) for Transfer events`);
 
+      // Fetch the wallet's current token balance first
+      let walletBalance = "0";
+      try {
+        walletBalance = await getStarknetTokenBalance(walletAddress, contractAddress);
+        console.log(`Wallet ${walletAddress} balance: ${formatTokenValue(walletBalance, "18")} ${tokenSymbol}`);
+        // Send wallet balance immediately to UI
+        onPartialResults?.([], 0, tokenSymbol, walletBalance);
+      } catch (balanceError) {
+        console.warn(`Could not fetch wallet balance:`, balanceError);
+      }
+
       onProgress?.(4, totalSteps, `Scanning recent blocks for transfers...`);
 
       // Track recipients as we find them and process immediately
@@ -707,8 +718,23 @@ export async function getStarknetTokenTransfers(
           console.log(`✅ Created recipient data:`, recipientData);
           recipients.push(recipientData);
 
+          // Sort recipients by total received (descending) after each addition
+          recipients.sort((a, b) => {
+            const aTotal = BigInt(a.totalReceived);
+            const bTotal = BigInt(b.totalReceived);
+            return aTotal > bTotal ? -1 : aTotal < bTotal ? 1 : 0;
+          });
+
+          // Update arrayIndex in the map after sorting
+          recipients.forEach((r, idx) => {
+            const mapEntry = recipientMap.get(r.address);
+            if (mapEntry) {
+              mapEntry.arrayIndex = idx;
+            }
+          });
+
           // Send partial results immediately after each recipient is processed
-          onPartialResults?.([...recipients], totalTransfers, tokenSymbol);
+          onPartialResults?.([...recipients], totalTransfers, tokenSymbol, walletBalance);
         } catch (balanceError) {
           console.error(`Failed to get balance for ${address}:`, balanceError);
 
@@ -735,8 +761,23 @@ export async function getStarknetTokenTransfers(
             lastTransferTime
           });
 
+          // Sort recipients by total received (descending) after each addition
+          recipients.sort((a, b) => {
+            const aTotal = BigInt(a.totalReceived);
+            const bTotal = BigInt(b.totalReceived);
+            return aTotal > bTotal ? -1 : aTotal < bTotal ? 1 : 0;
+          });
+
+          // Update arrayIndex in the map after sorting
+          recipients.forEach((r, idx) => {
+            const mapEntry = recipientMap.get(r.address);
+            if (mapEntry) {
+              mapEntry.arrayIndex = idx;
+            }
+          });
+
           // Send partial results even on error
-          onPartialResults?.([...recipients], totalTransfers, tokenSymbol);
+          onPartialResults?.([...recipients], totalTransfers, tokenSymbol, walletBalance);
         }
       };
 
@@ -796,8 +837,24 @@ export async function getStarknetTokenTransfers(
                         transferCount: existing.transferCount,
                         lastTransferTime: existing.lastTransferTime
                       };
+
+                      // Sort recipients by total received (descending) after updating
+                      recipients.sort((a, b) => {
+                        const aTotal = BigInt(a.totalReceived);
+                        const bTotal = BigInt(b.totalReceived);
+                        return aTotal > bTotal ? -1 : aTotal < bTotal ? 1 : 0;
+                      });
+
+                      // Update arrayIndex in the map after sorting
+                      recipients.forEach((r, idx) => {
+                        const mapEntry = recipientMap.get(r.address);
+                        if (mapEntry) {
+                          mapEntry.arrayIndex = idx;
+                        }
+                      });
+
                       // Send update to UI
-                      onPartialResults?.([...recipients], totalTransfers, tokenSymbol);
+                      onPartialResults?.([...recipients], totalTransfers, tokenSymbol, walletBalance);
                     }
                   } else {
                     // New recipient found! Process immediately
@@ -886,6 +943,7 @@ export async function getStarknetTokenTransfers(
         recipients,
         totalTransfers,
         tokenSymbol,
+        walletBalance,
         isDemo: false
       };
 

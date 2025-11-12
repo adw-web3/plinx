@@ -9,12 +9,13 @@ interface RecipientAnalysisProps {
   recipients: UnifiedRecipientAnalysis[];
   totalTransfers: number;
   tokenSymbol: string;
+  walletBalance: string;
   loading: boolean;
   error?: string;
   blockchain: Blockchain;
 }
 
-export function RecipientAnalysisComponent({ recipients, totalTransfers, tokenSymbol, loading, error, blockchain }: RecipientAnalysisProps) {
+export function RecipientAnalysisComponent({ recipients, totalTransfers, tokenSymbol, walletBalance, loading, error, blockchain }: RecipientAnalysisProps) {
   console.log('RecipientAnalysisComponent received:', {
     recipients: recipients.length,
     totalTransfers,
@@ -62,6 +63,25 @@ export function RecipientAnalysisComponent({ recipients, totalTransfers, tokenSy
 
   return (
     <div className="w-full max-w-6xl space-y-3">
+      {/* AirDrop Tokens Left - Highlighted prominently */}
+      {shouldShowStats && (
+        <div className="bg-gradient-to-r from-[#517ec5] to-[#6b8dd6] backdrop-blur-sm rounded-2xl border-2 border-white/40 p-6 shadow-lg">
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="text-sm font-semibold text-white/90 uppercase tracking-wide mb-2">🎁 AirDrop Tokens Left</div>
+              <div className={`text-4xl font-black text-white ${loading ? 'animate-pulse' : ''}`}>
+                {formatTokenValue(walletBalance, "18")} <span className="text-xl text-white/80">{tokenSymbol || "tokens"}</span>
+              </div>
+            </div>
+            <div className="hidden md:block">
+              <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center">
+                <span className="text-4xl">🪂</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Summary Stats - Visible during loading and after with live updates */}
       {shouldShowStats && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
@@ -99,7 +119,7 @@ export function RecipientAnalysisComponent({ recipients, totalTransfers, tokenSy
         <div className="bg-white/10 backdrop-blur-sm rounded-xl border-2 border-white/30 overflow-hidden">
           <div className="px-5 py-3 border-b-2 border-white/30">
             <h2 className="text-lg font-bold text-white">
-              Token Recipients
+              Leaderboard
               {loading && (
                 <span className="text-sm text-white/60 ml-2 animate-pulse">
                   Loading...
@@ -113,16 +133,19 @@ export function RecipientAnalysisComponent({ recipients, totalTransfers, tokenSy
             <thead className="bg-white/5">
               <tr>
                 <th className="px-4 py-2 text-left text-xs font-semibold text-white/70 uppercase tracking-wider">
+                  Rank
+                </th>
+                <th className="px-4 py-2 text-left text-xs font-semibold text-white/70 uppercase tracking-wider">
                   Recipient Address
                 </th>
                 <th className="px-4 py-2 text-left text-xs font-semibold text-white/70 uppercase tracking-wider">
-                  Total Received
+                  Total Claimed
                 </th>
                 <th className="px-4 py-2 text-left text-xs font-semibold text-white/70 uppercase tracking-wider">
                   Current Balance
                 </th>
                 <th className="px-4 py-2 text-left text-xs font-semibold text-white/70 uppercase tracking-wider">
-                  Transfers
+                  Spots
                 </th>
                 <th className="px-4 py-2 text-left text-xs font-semibold text-white/70 uppercase tracking-wider">
                   Last Transfer
@@ -133,15 +156,41 @@ export function RecipientAnalysisComponent({ recipients, totalTransfers, tokenSy
               </tr>
             </thead>
             <tbody className="divide-y divide-white/10">
-              {recipients.map((recipient) => {
+              {recipients.map((recipient, index) => {
+                const rank = index + 1;
                 const currentBalance = BigInt(recipient.currentBalance);
                 const totalReceived = BigInt(recipient.totalReceived);
                 const retentionPercentage = totalReceived > 0
                   ? Math.min(100, Number(currentBalance * BigInt(100) / totalReceived))
                   : 0;
 
+                // Highlight styles for top 3
+                const isTop3 = rank <= 3;
+                const rankBadgeColor = rank === 1
+                  ? "bg-yellow-500/20 text-yellow-300 border-yellow-400/50"
+                  : rank === 2
+                  ? "bg-gray-400/20 text-gray-300 border-gray-400/50"
+                  : rank === 3
+                  ? "bg-orange-500/20 text-orange-300 border-orange-400/50"
+                  : "bg-white/10 text-white/60 border-white/30";
+
+                const rowHighlight = rank === 1
+                  ? "bg-yellow-500/5"
+                  : rank === 2
+                  ? "bg-gray-400/5"
+                  : rank === 3
+                  ? "bg-orange-500/5"
+                  : "";
+
                 return (
-                  <tr key={recipient.address} className="hover:bg-white/5 transition-colors">
+                  <tr key={recipient.address} className={`hover:bg-white/5 transition-colors ${rowHighlight}`}>
+                    <td className="px-4 py-2 whitespace-nowrap">
+                      <div className="flex items-center justify-center">
+                        <span className={`inline-flex items-center justify-center w-8 h-8 rounded-full text-sm font-bold border ${rankBadgeColor}`}>
+                          {rank === 1 ? "🥇" : rank === 2 ? "🥈" : rank === 3 ? "🥉" : rank}
+                        </span>
+                      </div>
+                    </td>
                     <td className="px-4 py-2 whitespace-nowrap">
                       <div className="flex items-center space-x-2">
                         <span className="text-sm font-mono text-white">

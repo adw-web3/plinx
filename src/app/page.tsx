@@ -17,6 +17,7 @@ export default function Home() {
   const [currentContract, setCurrentContract] = useState("");
   const [currentBlockchain, setCurrentBlockchain] = useState<Blockchain>(SUPPORTED_BLOCKCHAINS[0]);
   const [isDemo, setIsDemo] = useState(false);
+  const [walletBalance, setWalletBalance] = useState<string>("0");
   const [progress, setProgress] = useState({ currentStep: 0, totalSteps: 0, message: "" });
   const resultsRef = useRef<HTMLDivElement>(null);
 
@@ -32,6 +33,7 @@ export default function Home() {
     setRecipients([]);
     setTotalTransfers(0);
     setTokenSymbol("");
+    setWalletBalance("0");
     setIsDemo(false);
 
     // Scroll to results section after a brief delay to let the DOM update
@@ -47,31 +49,42 @@ export default function Home() {
         (step, totalSteps, message) => {
           setProgress({ currentStep: step, totalSteps, message });
         },
-        (partialRecipients, totalTransfers, tokenSymbol) => {
+        (partialRecipients, totalTransfers, tokenSymbol, walletBalance) => {
           // Live update the UI with partial results
           setRecipients(partialRecipients);
           setTotalTransfers(totalTransfers);
           setTokenSymbol(tokenSymbol);
+          if (walletBalance !== undefined) {
+            setWalletBalance(walletBalance);
+          }
         }
       );
 
       setRecipients(result.recipients);
       setTotalTransfers(result.totalTransfers);
       setTokenSymbol(result.tokenSymbol);
+      setWalletBalance(result.walletBalance || "0");
       setIsDemo(result.isDemo);
 
       if (result.error) {
         setError(result.error);
       }
+
+      // Show completion message
+      setProgress({ currentStep: 5, totalSteps: 5, message: "Blockchain data fetched successfully!" });
     } catch {
       setError("Failed to fetch recipient data. Please try again.");
       setRecipients([]);
       setTotalTransfers(0);
       setTokenSymbol("");
+      setWalletBalance("0");
       setIsDemo(false);
     } finally {
       setLoading(false);
-      setProgress({ currentStep: 0, totalSteps: 0, message: "" });
+      // Clear progress after a brief delay to show completion message
+      setTimeout(() => {
+        setProgress({ currentStep: 0, totalSteps: 0, message: "" });
+      }, 2000);
     }
   };
 
@@ -133,23 +146,29 @@ export default function Home() {
 
           {(loading || recipients.length > 0) && (
             <>
-              <LoadingProgress
-                currentStep={progress.currentStep - 1}
-                totalSteps={progress.totalSteps - 1}
-                steps={[
-                  `Fetching token transfers from ${currentBlockchain.name}...`,
-                  "Processing transaction data...",
-                  "Analyzing recipient patterns...",
-                  "Finalizing recipient analysis..."
-                ]}
-                isLoading={loading}
-                progressMessage={progress.message}
-              />
+              {/* Progress Bar - shown only while loading */}
+              {loading && (
+                <div className="w-full max-w-6xl">
+                  <LoadingProgress
+                    currentStep={progress.currentStep - 1}
+                    totalSteps={progress.totalSteps - 1}
+                    steps={[
+                      `Fetching token transfers from ${currentBlockchain.name}...`,
+                      "Processing transaction data...",
+                      "Analyzing recipient patterns...",
+                      "Finalizing recipient analysis..."
+                    ]}
+                    isLoading={loading}
+                    progressMessage={progress.message}
+                  />
+                </div>
+              )}
 
               <RecipientAnalysisComponent
                 recipients={recipients}
                 totalTransfers={totalTransfers}
                 tokenSymbol={tokenSymbol}
+                walletBalance={walletBalance}
                 loading={loading}
                 error={error}
                 blockchain={currentBlockchain}

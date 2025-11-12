@@ -101,18 +101,21 @@ export function LoadingProgress({
   isLoading,
   progressMessage
 }: LoadingProgressProps) {
-  if (!isLoading) {
+  // Show when loading OR when there's a progress message (completion message)
+  if (!isLoading && !progressMessage) {
     return null;
   }
 
+  const allStepsComplete = currentStep === steps.length && !isLoading;
+
   return (
-    <div className="w-full max-w-6xl mx-auto">
+    <div className="w-full">
       <div className="bg-white/10 backdrop-blur-sm rounded-lg border border-white/30 p-3">
         <div className="space-y-1.5">
           {steps.map((step, index) => {
             const stepNumber = index + 1;
-            const isCompleted = stepNumber < currentStep;
-            const isCurrent = stepNumber === currentStep;
+            const isCompleted = allStepsComplete || stepNumber < currentStep;
+            const isCurrent = !allStepsComplete && stepNumber === currentStep;
 
             // Calculate progress for current step based on progressMessage
             let stepProgress = 0;
@@ -167,6 +170,18 @@ export function LoadingProgress({
               </div>
             );
           })}
+
+          {/* Show completion message when all steps are done */}
+          {allStepsComplete && progressMessage && (
+            <div className="mt-2 pt-2 border-t border-white/20">
+              <div className="flex items-center gap-2 text-green-300">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+                <span className="text-xs font-semibold">{progressMessage}</span>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

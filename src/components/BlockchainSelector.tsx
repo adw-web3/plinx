@@ -18,7 +18,7 @@ export const SUPPORTED_BLOCKCHAINS: Blockchain[] = [
     name: "Starknet",
     chainId: "SN_MAIN",
     apiUrl: "https://alpha-mainnet.starknet.io",
-    explorerUrl: "https://starkscan.co",
+    explorerUrl: "https://voyager.online",
     nativeCurrency: "ETH"
   },
   {

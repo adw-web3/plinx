@@ -10,6 +10,7 @@ export interface BlockchainApiResult {
   totalTransfers: number;
   tokenSymbol: string;
   isDemo: boolean;
+  walletBalance?: string; // Current token balance of the analyzed wallet
   error?: string;
 }
 
@@ -18,7 +19,7 @@ export async function getTokenRecipients(
   walletAddress: string,
   contractAddress: string,
   onProgress?: (step: number, totalSteps: number, message: string) => void,
-  onPartialResults?: (partialRecipients: UnifiedRecipientAnalysis[], totalTransfers: number, tokenSymbol: string) => void
+  onPartialResults?: (partialRecipients: UnifiedRecipientAnalysis[], totalTransfers: number, tokenSymbol: string, walletBalance?: string) => void
 ): Promise<BlockchainApiResult> {
   switch (blockchain.id) {
     case "bsc":
