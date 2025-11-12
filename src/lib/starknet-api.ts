@@ -211,7 +211,7 @@ async function getSTRKTransfersForWallet(
   walletAddress: string,
   contractAddress: string,
   onProgress?: (step: number, totalSteps: number, message: string) => void,
-  onPartialResults?: (partialRecipients: StarknetRecipientAnalysis[], totalTransfers: number, tokenSymbol: string) => void
+  onPartialResults?: (partialRecipients: StarknetRecipientAnalysis[], totalTransfers: number, tokenSymbol: string, walletBalance?: string) => void
 ): Promise<{
   recipients: StarknetRecipientAnalysis[];
   totalTransfers: number;
@@ -488,7 +488,7 @@ export async function getStarknetTokenTransfers(
   walletAddress: string,
   contractAddress: string,
   onProgress?: (step: number, totalSteps: number, message: string) => void,
-  onPartialResults?: (partialRecipients: StarknetRecipientAnalysis[], totalTransfers: number, tokenSymbol: string) => void
+  onPartialResults?: (partialRecipients: StarknetRecipientAnalysis[], totalTransfers: number, tokenSymbol: string, walletBalance?: string) => void
 ): Promise<{
   recipients: StarknetRecipientAnalysis[];
   totalTransfers: number;

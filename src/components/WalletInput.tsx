@@ -30,7 +30,7 @@ const getDefaultWalletAddress = (blockchain: Blockchain): string => {
   }
 };
 
-export function WalletInput({ onAddressSubmit, loading = false, currentWallet = "", currentContract = "" }: WalletInputProps) {
+export function WalletInput({ onAddressSubmit, loading = false, currentWallet = "" }: WalletInputProps) {
   // Starknet is now the fixed blockchain (first in SUPPORTED_BLOCKCHAINS array)
   const selectedBlockchain = SUPPORTED_BLOCKCHAINS[0];
   const [address, setAddress] = useState(getDefaultWalletAddress(selectedBlockchain));

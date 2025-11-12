@@ -165,7 +165,6 @@ export function RecipientAnalysisComponent({ recipients, totalTransfers, tokenSy
                   : 0;
 
                 // Highlight styles for top 3
-                const isTop3 = rank <= 3;
                 const rankBadgeColor = rank === 1
                   ? "bg-yellow-500/20 text-yellow-300 border-yellow-400/50"
                   : rank === 2
