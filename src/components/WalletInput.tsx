@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import type { FormEvent } from "react";
-import { BlockchainSelector, SUPPORTED_BLOCKCHAINS, type Blockchain } from "./BlockchainSelector";
+import { SUPPORTED_BLOCKCHAINS, type Blockchain } from "./BlockchainSelector";
 import { getDefaultContractAddress } from "@/lib/blockchain-api";
 import { validateStarknetAddress } from "@/lib/starknet-api";
 
@@ -29,9 +29,10 @@ const getDefaultWalletAddress = (blockchain: Blockchain): string => {
 };
 
 export function WalletInput({ onAddressSubmit, loading = false }: WalletInputProps) {
-  const [selectedBlockchain, setSelectedBlockchain] = useState<Blockchain>(SUPPORTED_BLOCKCHAINS[0]);
-  const [address, setAddress] = useState(getDefaultWalletAddress(SUPPORTED_BLOCKCHAINS[0]));
-  const [contractAddress, setContractAddress] = useState(getDefaultContractAddress(SUPPORTED_BLOCKCHAINS[0]));
+  // Starknet is now the fixed blockchain (first in SUPPORTED_BLOCKCHAINS array)
+  const selectedBlockchain = SUPPORTED_BLOCKCHAINS[0];
+  const [address, setAddress] = useState(getDefaultWalletAddress(selectedBlockchain));
+  const [contractAddress, setContractAddress] = useState(getDefaultContractAddress(selectedBlockchain));
   const [error, setError] = useState("");
 
   // Check if current contract is STRK native token
@@ -46,13 +47,6 @@ export function WalletInput({ onAddressSubmit, loading = false }: WalletInputPro
       const evmAddressRegex = /^0x[a-fA-F0-9]{40}$/;
       return evmAddressRegex.test(addr);
     }
-  };
-
-  const handleBlockchainChange = (blockchain: Blockchain) => {
-    setSelectedBlockchain(blockchain);
-    setContractAddress(getDefaultContractAddress(blockchain));
-    setAddress(getDefaultWalletAddress(blockchain));
-    setError("");
   };
 
   const handleSubmit = (e: FormEvent) => {
@@ -87,19 +81,6 @@ export function WalletInput({ onAddressSubmit, loading = false }: WalletInputPro
     <div className="w-full max-w-2xl">
       <div className="bg-white/10 backdrop-blur-lg rounded-2xl border-2 border-white/30 p-8">
         <form onSubmit={handleSubmit} className="space-y-6">
-          <div>
-            <label
-              htmlFor="blockchain-selector"
-              className="block text-sm font-semibold text-white mb-3"
-            >
-              Select Blockchain
-            </label>
-            <BlockchainSelector
-              selectedBlockchain={selectedBlockchain}
-              onBlockchainChange={handleBlockchainChange}
-              disabled={loading}
-            />
-          </div>
           <div>
             <label
               htmlFor="wallet-address"
