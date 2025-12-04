@@ -9,6 +9,7 @@ export interface BlockchainApiResult {
   recipients: UnifiedRecipientAnalysis[];
   totalTransfers: number;
   tokenSymbol: string;
+  tokenDecimals?: string;
   isDemo: boolean;
   walletBalance?: string; // Current token balance of the analyzed wallet
   error?: string;
@@ -19,11 +20,13 @@ export async function getTokenRecipients(
   walletAddress: string,
   contractAddress: string,
   onProgress?: (step: number, totalSteps: number, message: string) => void,
-  onPartialResults?: (partialRecipients: UnifiedRecipientAnalysis[], totalTransfers: number, tokenSymbol: string, walletBalance?: string) => void
+  onPartialResults?: (partialRecipients: UnifiedRecipientAnalysis[], totalTransfers: number, tokenSymbol: string, tokenDecimals?: string, walletBalance?: string) => void
 ): Promise<BlockchainApiResult> {
   switch (blockchain.id) {
-    case "bsc":
-      return await getDayvidendeRecipients(walletAddress, contractAddress, onProgress, onPartialResults);
+    case "bsc": {
+      const result = await getDayvidendeRecipients(walletAddress, contractAddress, onProgress, onPartialResults);
+      return { ...result, tokenDecimals: "18" };
+    }
 
     case "moonbeam":
       return await getMoonbeamTokenTransfers(walletAddress, contractAddress, onProgress, onPartialResults);
@@ -36,6 +39,7 @@ export async function getTokenRecipients(
         recipients: [],
         totalTransfers: 0,
         tokenSymbol: "TOKEN",
+        tokenDecimals: "18",
         isDemo: false,
         error: `Blockchain ${blockchain.name} not supported yet`
       };
@@ -83,7 +87,7 @@ export function getDefaultContractAddress(blockchain: Blockchain): string {
     case "bsc":
       return "0xfF1E54d02B5d0576E7BEfD03602E36d5720D1997"; // Default token contract
     case "moonbeam":
-      return "0x0000000000000000000000000000000000000802"; // Native GLMR precompile
+      return "0xa275bdAC2B69f7a27D4a2aF97F9Aa381F3527d9B"; // TUCH token
     case "starknet":
       return "0x01B3028E81e0604fD34EB439b610bd9a405c02C90Ae8569e47477B2E3d965b82"; // Custom token contract
     default:

@@ -14,12 +14,12 @@ export interface Blockchain {
 
 export const SUPPORTED_BLOCKCHAINS: Blockchain[] = [
   {
-    id: "starknet",
-    name: "Starknet",
-    chainId: "SN_MAIN",
-    apiUrl: "https://alpha-mainnet.starknet.io",
-    explorerUrl: "https://voyager.online",
-    nativeCurrency: "ETH"
+    id: "moonbeam",
+    name: "Moonbeam",
+    chainId: 1284,
+    apiUrl: "https://api.etherscan.io/v2/api",
+    explorerUrl: "https://moonscan.io",
+    nativeCurrency: "GLMR"
   },
   {
     id: "bsc",
@@ -29,14 +29,15 @@ export const SUPPORTED_BLOCKCHAINS: Blockchain[] = [
     explorerUrl: "https://bscscan.com",
     nativeCurrency: "BNB"
   },
-  {
-    id: "moonbeam",
-    name: "Moonbeam",
-    chainId: 1284,
-    apiUrl: "https://api.etherscan.io/v2/api",
-    explorerUrl: "https://moonscan.io",
-    nativeCurrency: "GLMR"
-  }
+  // Hidden for now - can be re-enabled by uncommenting
+  // {
+  //   id: "starknet",
+  //   name: "Starknet",
+  //   chainId: "SN_MAIN",
+  //   apiUrl: "https://alpha-mainnet.starknet.io",
+  //   explorerUrl: "https://voyager.online",
+  //   nativeCurrency: "ETH"
+  // },
 ];
 
 interface BlockchainSelectorProps {

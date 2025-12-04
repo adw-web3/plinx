@@ -1,16 +1,17 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useCallback } from "react";
 import { WalletInput } from "@/components/WalletInput";
 import { RecipientAnalysisComponent } from "@/components/RecipientAnalysis";
 import { LoadingProgress } from "@/components/ProgressBar";
 import { getTokenRecipients, type UnifiedRecipientAnalysis } from "@/lib/blockchain-api";
 import { SUPPORTED_BLOCKCHAINS, type Blockchain } from "@/components/BlockchainSelector";
+import { refreshWalletBalance } from "@/lib/moonbeam-api";
 
 export default function Home() {
   const [recipients, setRecipients] = useState<UnifiedRecipientAnalysis[]>([]);
-  const [totalTransfers, setTotalTransfers] = useState(0);
   const [tokenSymbol, setTokenSymbol] = useState("");
+  const [tokenDecimals, setTokenDecimals] = useState("18");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [currentWallet, setCurrentWallet] = useState("");
@@ -20,6 +21,16 @@ export default function Home() {
   const [walletBalance, setWalletBalance] = useState<string>("0");
   const [progress, setProgress] = useState({ currentStep: 0, totalSteps: 0, message: "" });
   const resultsRef = useRef<HTMLDivElement>(null);
+
+  // Callback to refresh wallet balance during analysis
+  const handleRefreshBalance = useCallback(async () => {
+    if (currentWallet && currentContract && currentBlockchain.id === "moonbeam") {
+      const newBalance = await refreshWalletBalance(currentWallet, currentContract);
+      if (newBalance !== "0") {
+        setWalletBalance(newBalance);
+      }
+    }
+  }, [currentWallet, currentContract, currentBlockchain.id]);
 
   const handleAddressSubmit = async (address: string, contractAddress: string, blockchain: Blockchain) => {
     setLoading(true);
@@ -31,8 +42,8 @@ export default function Home() {
 
     // Clear previous results
     setRecipients([]);
-    setTotalTransfers(0);
     setTokenSymbol("");
+    setTokenDecimals("18");
     setWalletBalance("0");
     setIsDemo(false);
 
@@ -49,11 +60,13 @@ export default function Home() {
         (step, totalSteps, message) => {
           setProgress({ currentStep: step, totalSteps, message });
         },
-        (partialRecipients, totalTransfers, tokenSymbol, walletBalance) => {
+        (partialRecipients, _totalTransfers, tokenSymbol, tokenDecimals, walletBalance) => {
           // Live update the UI with partial results
           setRecipients(partialRecipients);
-          setTotalTransfers(totalTransfers);
           setTokenSymbol(tokenSymbol);
+          if (tokenDecimals !== undefined) {
+            setTokenDecimals(tokenDecimals);
+          }
           if (walletBalance !== undefined) {
             setWalletBalance(walletBalance);
           }
@@ -61,8 +74,8 @@ export default function Home() {
       );
 
       setRecipients(result.recipients);
-      setTotalTransfers(result.totalTransfers);
       setTokenSymbol(result.tokenSymbol);
+      setTokenDecimals(result.tokenDecimals || "18");
       setWalletBalance(result.walletBalance || "0");
       setIsDemo(result.isDemo);
 
@@ -75,7 +88,6 @@ export default function Home() {
     } catch {
       setError("Failed to fetch recipient data. Please try again.");
       setRecipients([]);
-      setTotalTransfers(0);
       setTokenSymbol("");
       setWalletBalance("0");
       setIsDemo(false);
@@ -93,10 +105,10 @@ export default function Home() {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-6">
           <h1 className="text-3xl md:text-4xl font-black text-white mb-2">
-            Starknet Startup House Treasure Competition
+            Tubbly AirDrop analytics for Moonbeam
           </h1>
           <p className="text-white/80 text-base max-w-3xl mx-auto">
-            Track who is collecting the most Starknet Startup House Tokens - the winner takes all!
+            Track who is collecting the most AirDrop Tokens - the winner takes all!
           </p>
         </div>
 
@@ -166,12 +178,14 @@ export default function Home() {
 
               <RecipientAnalysisComponent
                 recipients={recipients}
-                totalTransfers={totalTransfers}
                 tokenSymbol={tokenSymbol}
+                tokenDecimals={tokenDecimals}
                 walletBalance={walletBalance}
                 loading={loading}
                 error={error}
                 blockchain={currentBlockchain}
+                progressMessage={progress.message}
+                onRefreshBalance={handleRefreshBalance}
               />
             </>
           )}

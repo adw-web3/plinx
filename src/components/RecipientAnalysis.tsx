@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
 import type { UnifiedRecipientAnalysis } from "@/lib/blockchain-api";
 import { getBlockchainExplorerUrl } from "@/lib/blockchain-api";
 import { formatTokenValue, formatTimestamp, shortenAddress } from "@/lib/bsc-api";
@@ -7,32 +8,59 @@ import type { Blockchain } from "@/components/BlockchainSelector";
 
 interface RecipientAnalysisProps {
   recipients: UnifiedRecipientAnalysis[];
-  totalTransfers: number;
   tokenSymbol: string;
+  tokenDecimals: string;
   walletBalance: string;
   loading: boolean;
   error?: string;
   blockchain: Blockchain;
+  progressMessage?: string;
+  onRefreshBalance?: () => void;
 }
 
-export function RecipientAnalysisComponent({ recipients, totalTransfers, tokenSymbol, walletBalance, loading, error, blockchain }: RecipientAnalysisProps) {
-  console.log('RecipientAnalysisComponent received:', {
-    recipients: recipients.length,
-    totalTransfers,
-    tokenSymbol,
-    loading,
-    error,
-    firstRecipient: recipients[0]
-  });
+const ITEMS_PER_PAGE = 100;
+
+export function RecipientAnalysisComponent({ recipients, tokenSymbol, tokenDecimals, walletBalance, loading, error, blockchain, progressMessage, onRefreshBalance }: RecipientAnalysisProps) {
+  const refreshIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+
+  // Reset to page 1 when recipients change significantly (new search)
+  useEffect(() => {
+    if (recipients.length === 0) {
+      setCurrentPage(1);
+    }
+  }, [recipients.length]);
+
+  // Pagination calculations
+  const totalPages = Math.ceil(recipients.length / ITEMS_PER_PAGE);
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const endIndex = startIndex + ITEMS_PER_PAGE;
+  const paginatedRecipients = recipients.slice(startIndex, endIndex);
+
+  // Refresh wallet balance every 5 seconds during loading
+  useEffect(() => {
+    if (loading && onRefreshBalance) {
+      refreshIntervalRef.current = setInterval(() => {
+        onRefreshBalance();
+      }, 5000);
+    }
+
+    return () => {
+      if (refreshIntervalRef.current) {
+        clearInterval(refreshIntervalRef.current);
+        refreshIntervalRef.current = null;
+      }
+    };
+  }, [loading, onRefreshBalance]);
 
   // Calculate summary stats (will be 0 initially but update as recipients load)
   const totalTokensDistributed = recipients.reduce((sum, recipient) => {
     return sum + BigInt(recipient.totalReceived);
   }, BigInt(0));
 
-  const totalCurrentlyHeld = recipients.reduce((sum, recipient) => {
-    return sum + BigInt(recipient.currentBalance);
-  }, BigInt(0));
+  const totalAirdropSpots = recipients.reduce((sum, recipient) => {
+    return sum + recipient.transferCount;
+  }, 0);
 
   if (error) {
     return (
@@ -70,7 +98,7 @@ export function RecipientAnalysisComponent({ recipients, totalTransfers, tokenSy
             <div>
               <div className="text-sm font-semibold text-white/90 uppercase tracking-wide mb-2">🎁 AirDrop Tokens Left</div>
               <div className={`text-4xl font-black text-white ${loading ? 'animate-pulse' : ''}`}>
-                {formatTokenValue(walletBalance, "18")} <span className="text-xl text-white/80">{tokenSymbol || "tokens"}</span>
+                {formatTokenValue(walletBalance, tokenDecimals)} <span className="text-xl text-white/80">{tokenSymbol || "tokens"}</span>
               </div>
             </div>
             <div className="hidden md:block">
@@ -84,7 +112,7 @@ export function RecipientAnalysisComponent({ recipients, totalTransfers, tokenSy
 
       {/* Summary Stats - Visible during loading and after with live updates */}
       {shouldShowStats && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           <div className="bg-white/10 backdrop-blur-sm rounded-xl border-2 border-white/30 p-4">
           <div className="text-xs font-semibold text-white/70 uppercase tracking-wide">Total Recipients</div>
           <div className={`text-2xl font-bold text-white mt-1 ${loading ? 'animate-pulse' : ''}`}>
@@ -95,19 +123,13 @@ export function RecipientAnalysisComponent({ recipients, totalTransfers, tokenSy
           <div className="bg-white/10 backdrop-blur-sm rounded-xl border-2 border-white/30 p-4">
             <div className="text-xs font-semibold text-white/70 uppercase tracking-wide">Total Distributed</div>
           <div className={`text-2xl font-bold text-white mt-1 ${loading ? 'animate-pulse' : ''}`}>
-            {formatTokenValue(totalTokensDistributed.toString(), "18")} <span className="text-sm text-white/60">{tokenSymbol || "tokens"}</span>
+            {formatTokenValue(totalTokensDistributed.toString(), tokenDecimals)} <span className="text-sm text-white/60">{tokenSymbol || "tokens"}</span>
           </div>
           </div>
           <div className="bg-white/10 backdrop-blur-sm rounded-xl border-2 border-white/30 p-4">
-            <div className="text-xs font-semibold text-white/70 uppercase tracking-wide">Currently Held</div>
+            <div className="text-xs font-semibold text-white/70 uppercase tracking-wide">Airdrop Spots Visited</div>
           <div className={`text-2xl font-bold text-white mt-1 ${loading ? 'animate-pulse' : ''}`}>
-            {formatTokenValue(totalCurrentlyHeld.toString(), "18")} <span className="text-sm text-white/60">{tokenSymbol || "tokens"}</span>
-          </div>
-          </div>
-          <div className="bg-white/10 backdrop-blur-sm rounded-xl border-2 border-white/30 p-4">
-            <div className="text-xs font-semibold text-white/70 uppercase tracking-wide">Airdrop Spots</div>
-          <div className={`text-2xl font-bold text-white mt-1 ${loading ? 'animate-pulse' : ''}`}>
-            {totalTransfers}
+            {totalAirdropSpots}
             {loading && <span className="text-sm text-white/60 ml-2">counting...</span>}
           </div>
           </div>
@@ -120,12 +142,34 @@ export function RecipientAnalysisComponent({ recipients, totalTransfers, tokenSy
           <div className="px-5 py-3 border-b-2 border-white/30">
             <h2 className="text-lg font-bold text-white">
               Leaderboard
-              {loading && (
-                <span className="text-sm text-white/60 ml-2 animate-pulse">
-                  Loading...
-                </span>
-              )}
             </h2>
+            {loading && progressMessage && (
+              <div className="mt-2">
+                <div className="text-sm text-white/70 mb-1">{progressMessage}</div>
+                <div className="w-full bg-white/20 rounded-full h-2">
+                  <div
+                    className="bg-gradient-to-r from-cyan-400 to-blue-500 h-2 rounded-full transition-all duration-300"
+                    style={{
+                      width: (() => {
+                        // Parse progress from message like "Fetching balances... 898/3169 recipients"
+                        const match = progressMessage.match(/(\d+)\/(\d+)/);
+                        if (match) {
+                          const current = parseInt(match[1], 10);
+                          const total = parseInt(match[2], 10);
+                          return `${Math.round((current / total) * 100)}%`;
+                        }
+                        // Parse percentage from message like "Processing transfers... 50%"
+                        const percentMatch = progressMessage.match(/(\d+)%/);
+                        if (percentMatch) {
+                          return `${percentMatch[1]}%`;
+                        }
+                        return '100%';
+                      })()
+                    }}
+                  />
+                </div>
+              </div>
+            )}
           </div>
 
         <div className="overflow-x-auto">
@@ -142,27 +186,16 @@ export function RecipientAnalysisComponent({ recipients, totalTransfers, tokenSy
                   Total Claimed
                 </th>
                 <th className="px-4 py-2 text-left text-xs font-semibold text-white/70 uppercase tracking-wider">
-                  Current Balance
-                </th>
-                <th className="px-4 py-2 text-left text-xs font-semibold text-white/70 uppercase tracking-wider">
                   Spots
                 </th>
                 <th className="px-4 py-2 text-left text-xs font-semibold text-white/70 uppercase tracking-wider">
                   Last Transfer
                 </th>
-                <th className="px-4 py-2 text-left text-xs font-semibold text-white/70 uppercase tracking-wider">
-                  Status
-                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-white/10">
-              {recipients.map((recipient, index) => {
-                const rank = index + 1;
-                const currentBalance = BigInt(recipient.currentBalance);
-                const totalReceived = BigInt(recipient.totalReceived);
-                const retentionPercentage = totalReceived > 0
-                  ? Math.min(100, Number(currentBalance * BigInt(100) / totalReceived))
-                  : 0;
+              {paginatedRecipients.map((recipient, index) => {
+                const rank = startIndex + index + 1;
 
                 // Highlight styles for top 3
                 const rankBadgeColor = rank === 1
@@ -214,12 +247,7 @@ export function RecipientAnalysisComponent({ recipients, totalTransfers, tokenSy
                     </td>
                     <td className="px-4 py-2 whitespace-nowrap">
                       <div className="text-sm font-semibold text-white">
-                        {formatTokenValue(recipient.totalReceived, "18")} <span className="text-white/60 text-xs">{tokenSymbol || "tokens"}</span>
-                      </div>
-                    </td>
-                    <td className="px-4 py-2 whitespace-nowrap">
-                      <div className="text-sm font-semibold text-white">
-                        {formatTokenValue(recipient.currentBalance, "18")} <span className="text-white/60 text-xs">{tokenSymbol || "tokens"}</span>
+                        {formatTokenValue(recipient.totalReceived, tokenDecimals)} <span className="text-white/60 text-xs">{tokenSymbol || "tokens"}</span>
                       </div>
                     </td>
                     <td className="px-4 py-2 whitespace-nowrap">
@@ -237,35 +265,54 @@ export function RecipientAnalysisComponent({ recipients, totalTransfers, tokenSy
                         </div>
                       )}
                     </td>
-                    <td className="px-4 py-2 whitespace-nowrap">
-                      {recipient.currentBalance === "0" && recipient.lastTransferTime === "0" ? (
-                        <div className="flex items-center space-x-1">
-                          <div className="h-1.5 w-1.5 bg-blue-400 rounded-full animate-pulse"></div>
-                          <span className="text-xs text-white/50 italic">Checking...</span>
-                        </div>
-                      ) : (
-                        <div className="flex items-center space-x-2">
-                          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold ${
-                            currentBalance > 0
-                              ? "bg-green-500/20 text-green-300 border border-green-400/50"
-                              : "bg-gray-500/20 text-gray-300 border border-gray-400/50"
-                          }`}>
-                            {currentBalance > 0 ? "Holding" : "Sold"}
-                          </span>
-                          {currentBalance > 0 && (
-                            <span className="text-xs text-white/60">
-                              {retentionPercentage.toFixed(1)}%
-                            </span>
-                          )}
-                        </div>
-                      )}
-                    </td>
                   </tr>
                 );
               })}
             </tbody>
           </table>
         </div>
+
+          {/* Pagination Controls */}
+          {totalPages > 1 && (
+            <div className="px-5 py-3 border-t-2 border-white/30 flex items-center justify-between">
+              <div className="text-sm text-white/70">
+                Showing {startIndex + 1}-{Math.min(endIndex, recipients.length)} of {recipients.length} recipients
+              </div>
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={() => setCurrentPage(1)}
+                  disabled={currentPage === 1}
+                  className="px-3 py-1 text-sm rounded-lg bg-white/10 text-white/70 hover:bg-white/20 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                >
+                  First
+                </button>
+                <button
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  className="px-3 py-1 text-sm rounded-lg bg-white/10 text-white/70 hover:bg-white/20 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                >
+                  Prev
+                </button>
+                <span className="px-3 py-1 text-sm text-white">
+                  Page {currentPage} of {totalPages}
+                </span>
+                <button
+                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                  className="px-3 py-1 text-sm rounded-lg bg-white/10 text-white/70 hover:bg-white/20 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                >
+                  Next
+                </button>
+                <button
+                  onClick={() => setCurrentPage(totalPages)}
+                  disabled={currentPage === totalPages}
+                  className="px-3 py-1 text-sm rounded-lg bg-white/10 text-white/70 hover:bg-white/20 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                >
+                  Last
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>
